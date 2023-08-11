@@ -1,0 +1,388 @@
+import { allIndexedMapObjects } from "Hooks/useMeshFloors/globals";
+import { DoubleSide, MeshPhongMaterial, Mesh, CanvasTexture, MeshBasicMaterial, PlaneGeometry, Vector3, BufferGeometry, Box3, Color, SphereGeometry } from "three";
+import type { Object3D, Scene } from "three";
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
+import {Geometry} from "three/examples/jsm/deprecated/Geometry";
+import {IExtMesh} from "../Hooks/useMeshFloors/types";
+
+
+export function drawTextLogoStoreOnMap(allNonIndexedMapObjects: Record<any, any>[], scene: Scene, textLogoNamePrefix: string, allIndexedMapObjects: Record<any, any>[], allIndexedRetailers: Record<any, any>[], config: Record<any, any>, myFont: any, floors: Record<any, any>[]) {
+    for (let textLogoLayerAddedIndex = 0; textLogoLayerAddedIndex < allNonIndexedMapObjects.length; textLogoLayerAddedIndex++) {
+        addTextOrLogoOnStore(allNonIndexedMapObjects[textLogoLayerAddedIndex], scene, textLogoNamePrefix, allIndexedMapObjects, allIndexedRetailers, config, myFont, floors);
+    }
+    console.debug({scene});
+}
+
+function addTextOrLogoOnStore(map_obj: any, scene: Scene, textLogoNamePrefix: string, allIndexedMapObjects: Record<any, any>[], allIndexedRetailers: Record<any, any>[], config: Record<any, any>, myFont: any, floors: Record<any, any>[]) {
+    //@ts-ignore
+    let mesh = scene.getObjectByProperty('object_id', map_obj.map_obj_name);
+    console.debug({mesh});
+    if (mesh) {
+        //@ts-ignore
+        add_store_name_logo(mesh, textLogoNamePrefix, allIndexedMapObjects, allIndexedRetailers, config, myFont, floors, scene);
+    }
+}
+
+function deleteMeshByObjectID(object_id: string, scene: Scene, floors: Record<any, any>) {
+    if (object_id) {
+        let mesh = scene.getObjectByProperty('object_id', object_id);
+        if (mesh) {
+            //@ts-ignore
+            mesh.geometry.dispose();
+            //@ts-ignore
+            mesh.material.dispose();
+            //@ts-ignore
+            floors[mesh.floor_index].objsGroup.remove(mesh);
+        }
+    }
+}
+
+function getCenterPoint(mesh: Mesh) {
+    var mesh_center_point = new Vector3();
+    getMeshGroupBoundingBox(mesh).getCenter(mesh_center_point);
+    return mesh_center_point;
+}
+
+function getMeshSize(mesh: Mesh) {
+    var point = new Vector3();
+    //@ts-ignore
+    getMeshGroupBoundingBox(mesh).getSize(point);
+    return point;
+}
+
+function getMeshGroupBoundingBox(mesh: Mesh | Array<Mesh>) {
+    if (!Array.isArray(mesh)) {
+        mesh = [mesh];
+    }
+    const box = mesh.reduce((box, obj) => {
+        if (!obj.geometry.boundingBox) {
+            obj.geometry.computeBoundingBox();
+        }
+        //@ts-ignore
+        box.union(obj.geometry.boundingBox);
+        return box;
+    }, new Box3());
+    return box;
+}
+
+function layer_text_logo_position(mesh: Mesh, newMeshPos: Vector3, mesh_size: Vector3, newMesh: Mesh, allIndexedMapObjects: Record<any, any>) {
+    const object_id = (mesh as IExtMesh).object_id;
+    if (!object_id) return;
+    return layer_text_logo_position_by_id(object_id, newMeshPos, mesh_size, newMesh, allIndexedMapObjects);
+}
+function layer_text_logo_position_by_id(object_id: string, newMeshPos: Vector3, mesh_size: Vector3, newMesh: Mesh, allIndexedMapObjects: Record<any, any>) {
+    let map_obj = allIndexedMapObjects[object_id];
+
+    let offsetX = parseInt(map_obj.offsetX);
+    let offsetY = parseInt(map_obj.offsetY);
+
+    newMeshPos.z = mesh_size.z;
+
+    //@ts-ignore
+    newMesh.obj_angle = parseInt(map_obj.rotate); //-180 to 180
+    //@ts-ignore
+    newMesh.rotateZ(newMesh.obj_angle * Math.PI / 180);
+
+    newMesh.scale.y *= -1;
+
+    newMeshPos.x += offsetX;
+    newMeshPos.y += offsetY;
+
+    newMesh.position.set(newMeshPos.x, newMeshPos.y, newMeshPos.z + 1);
+}
+
+function hex_to_color(hex_code: string) {
+    return new Color(parseInt('0x' + hex_code, 16));
+}
+
+function getRenderOrder(mesh_type: string) {
+    const renderOrders = {
+        'underlay': 0,
+        'overlay': 1,
+        'building-base': 1,
+        'base': 2,
+        'store': 3,
+        'big-store': 4,
+        'kiosk': 5,
+        'wall': 6,
+        'outer-wall': 7,
+        'boundary': 8,
+        'amenity': 9,
+        'layer-image': 10,
+        'layer-text': 11,
+        'route-tube': 12,
+        'special-shape': 13,
+    } as Record<string, number>;
+    if (renderOrders[mesh_type]) return renderOrders[mesh_type];
+    return 0;
+}
+
+/*function add_store_name_logo(mesh: Mesh, textLogoNamePrefix: string, allIndexedMapObjects: Record<any, any>, allIndexedRetailers: Record<any, any>, config: Record<any, any>, myFont: any, floors: Record<any, any>, scene: Scene) {
+    //@ts-ignore
+    var new_object_id = textLogoNamePrefix + mesh.object_id;
+    deleteMeshByObjectID(new_object_id, scene, floors);
+
+    var mesh_center_point = getCenterPoint(mesh);
+    var mesh_size = getMeshSize(mesh);
+    //@ts-ignore
+    let map_obj = allIndexedMapObjects[mesh.object_id];
+
+    if (['retail_name', 'retail_text', 'custom_text'].includes(map_obj.layer_type)) {
+        let text = '';
+        if (map_obj.layer_type == 'retail_name' && map_obj.retailer_id && allIndexedRetailers[map_obj.retailer_id]) {
+            text = allIndexedRetailers[map_obj.retailer_id].retail_name;
+        } else if (['retail_text', 'custom_text'].includes(map_obj.layer_type)) {
+            text = map_obj.custom_text;
+        } else {
+            return false;
+        }
+
+        let text_color = config.STORE_TEXT_COLOR;
+        if (map_obj.text_color != null) {
+            text_color = hex_to_color(map_obj.text_color);
+        }
+
+        const material_settings = {
+            color: text_color,
+            transparent: true,
+            side: DoubleSide,
+            depthWrite: false,
+            depthTest: false,
+        };
+        let text_material = new MeshPhongMaterial(material_settings);
+        let text_geometry = new TextGeometry(text, {
+            font: myFont,
+            size: parseInt(map_obj.size),
+            height: 0.01,
+            curveSegments: 4,
+        });
+        text_geometry.center();
+
+        const textMesh = new Mesh(text_geometry, text_material);
+        layer_text_logo_position(mesh, mesh_center_point, mesh_size, textMesh, allIndexedMapObjects);
+        //@ts-ignore
+        textMesh.object_id = new_object_id;
+        //@ts-ignore
+        textMesh.floor_index = mesh.floor_index;
+        textMesh.renderOrder = getRenderOrder('layer-text');
+        //@ts-ignore
+        floors[mesh.floor_index].objsGroup.add(textMesh);
+        scene.add(textMesh);
+        console.debug({UpdateTexts: scene});
+
+        // Show bounding sphere
+
+        const wireframeMaterial = new MeshBasicMaterial({
+            color: 0x0000ff,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.25,
+        });
+        textMesh.geometry.computeBoundingSphere();
+        const BoundingSphereMesh = new Mesh(
+            new SphereGeometry(textMesh.geometry.boundingSphere?.radius || 1, 32, 32),
+            wireframeMaterial
+        )
+        @ts-ignore
+        BoundingSphereMesh.position.copy(textMesh.geometry.boundingSphere.center || [0, 0, 0]);
+        scene.add(BoundingSphereMesh);
+        
+    }
+
+     else if (
+        map_obj.layer_type === 'retail_logo' ||
+        map_obj.layer_type === 'custom_image' ||
+        (map_obj.obj_type === 'special' && map_obj.layer_type === 'kiosk' && map_obj.kiosk_id !== null) ||
+        (map_obj.obj_type === 'special' && map_obj.layer_type === 'amenity' && map_obj.value !== '')
+    ) {
+        //@ts-ignore
+        getImageLogo(allIndexedRetailers, map_obj, mesh, mesh_center_point, mesh_size);
+    }
+}*/
+
+function getImageLogo(allIndexedRetailers: Record<string, any>, map_obj: Record<string, any>, mesh: BufferGeometry,object_id: string | number, new_object_id: string | null, mesh_center_point: Vector3, mesh_size: Vector3, floors: any, handleAsync: (meshLogo: {storeLogo: Object3D}) => void): void {
+    
+    var c = document.createElement("canvas");
+    var ctx = c.getContext("2d");
+
+    var img = new Image();
+    img.crossOrigin = 'Anonymous';
+    if (map_obj.obj_type == 'retailer') {
+        img.src = allIndexedRetailers[map_obj.retailer_id].logo;
+    } else if (map_obj.obj_type == 'special') {
+        
+        var svg_image_name = map_obj.value;
+        if (map_obj.layer_type == 'kiosk') svg_image_name = 'kiosk';
+        if (svg_image_name) {
+            let svg_color = '222222';
+            if (map_obj.text_color != null) {
+                svg_color = map_obj.text_color;
+            }
+
+            document.querySelector('#map-special-svg-' + svg_image_name + ' [fill]')?.setAttribute('fill', '#' + svg_color);
+            //@ts-ignore
+            var svg_html = document.getElementById('map-special-svg-' + svg_image_name).querySelector("svg");
+            //@ts-ignore
+            var svgData = (new XMLSerializer()).serializeToString(svg_html);
+            img.src = "data:image/svg+xml;base64," + window.btoa(unescape(encodeURIComponent(svgData)));
+
+            // img.src = BASE_URL + 'common/svg-image?image=' + allSvgIcons[svg_image_name] + '&color=' + svg_color;
+        }
+        
+    } else {
+        img.src = map_obj.custom_image;
+   }
+   console.debug({'img.src': img.src});
+    img.onload = function () {
+
+        //@ts-ignore
+        c.width = this.width;
+        //@ts-ignore
+        c.height = this.height;
+
+        ctx?.drawImage(img, 0, 0);
+
+        let texture = new CanvasTexture(c);
+        //@ts-ignore
+        var geometry = new PlaneGeometry(map_obj.size, map_obj.size * this.height / this.width);
+        var material = new MeshBasicMaterial({
+            map: texture,
+            transparent: true,
+            side: DoubleSide,
+            depthTest: false,
+            depthWrite: false,
+        });
+        var logoMesh = new Mesh(geometry, material);
+        //@ts-ignore
+        layer_text_logo_position_by_id(object_id, mesh_center_point, mesh_size, logoMesh, allIndexedMapObjects);
+        // layer_text_logo_position(mesh, mesh_center_point, mesh_size, logoMesh, allIndexedMapObjects);
+        //@ts-ignore
+        // logoMesh.object_id = new_object_id;
+        logoMesh.object_id = new_object_id;
+        //@ts-ignore
+        logoMesh.floor_index = mesh.floor_index;
+        logoMesh.renderOrder = getRenderOrder('layer-image');
+        //@ts-ignore
+        floors[mesh.floor_index]?.objsGroup.add(logoMesh);
+        console.debug({ logoMesh });
+
+        /*const wireframeMaterial = new MeshBasicMaterial({
+            color: 0x0000ff,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.25,
+        });
+        logoMesh.geometry.computeBoundingSphere();
+        const BoundingSphereMesh = new Mesh(
+            new SphereGeometry(logoMesh.geometry.boundingSphere?.radius || 1, 32, 32),
+            wireframeMaterial
+        )
+        //@ts-ignore
+        BoundingSphereMesh.position.copy(logoMesh.geometry.boundingSphere.center || [0, 0, 0]);
+        
+        handleAsync({storeLogo: BoundingSphereMesh});
+        */
+        handleAsync({storeLogo: logoMesh});
+    };
+}
+
+
+
+export function get_store_name_logo_geo(geometry: BufferGeometry, object_id:string, floor_index: number, textLogoNamePrefix: string, allIndexedMapObjects: Record<any, any>, allIndexedRetailers: Record<any, any>, config: Record<any, any>, myFont: any, floors: Record<any, any>, handleAsync: (meshLogo: any) => void) {
+    const new_object_id = textLogoNamePrefix + object_id;
+    console.debug({floor_index});
+    // deleteMeshByObjectID(new_object_id, scene, floors);
+    let result = null;
+
+    if (!geometry.boundingBox) {
+        geometry.computeBoundingBox();
+    }
+    if (!geometry.boundingBox) {
+        return null;
+    }
+
+    const boundingBox = geometry.boundingBox;
+
+    const mesh_center_point = new Vector3();
+    boundingBox.getCenter(mesh_center_point);
+
+    const mesh_size = new Vector3();
+    boundingBox.getSize(mesh_size);
+
+    //@ts-ignore
+    const map_obj = allIndexedMapObjects[object_id];
+
+    if (['retail_name', 'retail_text', 'custom_text'].includes(map_obj.layer_type)) {
+        let text = '';
+        if (map_obj.layer_type == 'retail_name' && map_obj.retailer_id && allIndexedRetailers[map_obj.retailer_id]) {
+            text = allIndexedRetailers[map_obj.retailer_id].retail_name;
+        } else if (['retail_text', 'custom_text'].includes(map_obj.layer_type)) {
+            text = map_obj.custom_text;
+        } else {
+            return false;
+        }
+
+        let text_color = config.STORE_TEXT_COLOR;
+        if (map_obj.text_color != null) {
+            text_color = hex_to_color(map_obj.text_color);
+        }
+
+        const material_settings = {
+            color: text_color,
+            transparent: true,
+            side: DoubleSide,
+            depthWrite: false,
+            depthTest: false,
+        };
+        let text_material = new MeshPhongMaterial(material_settings);
+        let text_geometry = new TextGeometry(text, {
+            font: myFont,
+            size: parseInt(map_obj.size),
+            height: 0.01,
+            curveSegments: 4,
+        });
+        text_geometry.center();
+
+        const textMesh = new Mesh(text_geometry, text_material) as IExtMesh;
+        layer_text_logo_position_by_id(object_id, mesh_center_point, mesh_size, textMesh, allIndexedMapObjects);
+        textMesh.object_id = new_object_id;
+        textMesh.floor_index = floor_index;
+        textMesh.renderOrder = getRenderOrder('layer-text');
+
+        floors[floor_index].objsGroup.add(textMesh);
+
+        //scene.add(textMesh);
+        //console.debug({UpdateTexts: scene});
+
+        // Show bounding sphere
+
+        /*const wireframeMaterial = new MeshBasicMaterial({
+            color: 0x0000ff,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.25,
+        });
+        textMesh.geometry.computeBoundingSphere();
+        const BoundingSphereMesh = new Mesh(
+            new SphereGeometry(textMesh.geometry.boundingSphere?.radius || 1, 32, 32),
+            wireframeMaterial
+        )
+        @ts-ignore
+        BoundingSphereMesh.position.copy(textMesh.geometry.boundingSphere.center || [0, 0, 0]);
+        scene.add(BoundingSphereMesh);
+        */
+        result = { textMesh };
+    }
+
+    else if (
+       map_obj.layer_type == 'retail_logo' ||
+       map_obj.layer_type == 'custom_image' ||
+       (map_obj.obj_type == 'special' && map_obj.layer_type == 'kiosk' && map_obj.kiosk_id != null) ||
+       (map_obj.obj_type == 'special' && map_obj.layer_type == 'amenity' && map_obj.value != '')
+   ) {
+        getImageLogo(allIndexedRetailers, map_obj, geometry, object_id, new_object_id, mesh_center_point, mesh_size, floors, handleAsync);
+
+
+   }
+   return result;
+}
