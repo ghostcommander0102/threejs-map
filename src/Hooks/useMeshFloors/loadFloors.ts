@@ -1,7 +1,7 @@
 import {getMeshParams} from "./getMeshParams";
 import {SVGResult} from "three/examples/jsm/loaders/SVGLoader";
 import {IFloorData, IMeshValues} from "./types";
-import {allIndexedMapObjects, allNodesFloor, pathFinderGraph} from "./globals";
+import {allIndexedMapObjects, allIndexedRetailers, allNodesFloor, pathFinderGraph} from "./globals";
 import {getMaterialAndGeometry} from "./getMaterialAndGeometry";
 import {Material, ShapeGeometry} from "three";
 
@@ -57,11 +57,13 @@ export function loadFloors(floors:IFloorData[], floors_loaded:number, config:any
                     floors,
                     floor_index,
                     allIndexedMapObjects,
+                    allIndexedRetailers,
                     path
                 );
+                //@ts-ignore
                 GeometriesAndMaterials.push(meshParams);
             }
         }
     }
-    return GeometriesAndMaterials;
+    return { GeometriesAndMaterials, graph: pathFinderGraph };
 }

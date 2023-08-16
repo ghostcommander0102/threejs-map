@@ -10,13 +10,11 @@ export function drawTextLogoStoreOnMap(allNonIndexedMapObjects: Record<any, any>
     for (let textLogoLayerAddedIndex = 0; textLogoLayerAddedIndex < allNonIndexedMapObjects.length; textLogoLayerAddedIndex++) {
         addTextOrLogoOnStore(allNonIndexedMapObjects[textLogoLayerAddedIndex], scene, textLogoNamePrefix, allIndexedMapObjects, allIndexedRetailers, config, myFont, floors);
     }
-    console.debug({scene});
 }
 
 function addTextOrLogoOnStore(map_obj: any, scene: Scene, textLogoNamePrefix: string, allIndexedMapObjects: Record<any, any>[], allIndexedRetailers: Record<any, any>[], config: Record<any, any>, myFont: any, floors: Record<any, any>[]) {
     //@ts-ignore
     let mesh = scene.getObjectByProperty('object_id', map_obj.map_obj_name);
-    console.debug({mesh});
     if (mesh) {
         //@ts-ignore
         add_store_name_logo(mesh, textLogoNamePrefix, allIndexedMapObjects, allIndexedRetailers, config, myFont, floors, scene);
@@ -50,7 +48,7 @@ function getMeshSize(mesh: Mesh) {
     return point;
 }
 
-function getMeshGroupBoundingBox(mesh: Mesh | Array<Mesh>) {
+export function getMeshGroupBoundingBox(mesh: Mesh | Array<Mesh>) {
     if (!Array.isArray(mesh)) {
         mesh = [mesh];
     }
@@ -232,7 +230,6 @@ function getImageLogo(allIndexedRetailers: Record<string, any>, map_obj: Record<
     } else {
         img.src = map_obj.custom_image;
    }
-   console.debug({'img.src': img.src});
     img.onload = function () {
 
         //@ts-ignore
@@ -264,7 +261,6 @@ function getImageLogo(allIndexedRetailers: Record<string, any>, map_obj: Record<
         logoMesh.renderOrder = getRenderOrder('layer-image');
         //@ts-ignore
         floors[mesh.floor_index]?.objsGroup.add(logoMesh);
-        console.debug({ logoMesh });
 
         /*const wireframeMaterial = new MeshBasicMaterial({
             color: 0x0000ff,
@@ -290,7 +286,6 @@ function getImageLogo(allIndexedRetailers: Record<string, any>, map_obj: Record<
 
 export function get_store_name_logo_geo(geometry: BufferGeometry, object_id:string, floor_index: number, textLogoNamePrefix: string, allIndexedMapObjects: Record<any, any>, allIndexedRetailers: Record<any, any>, config: Record<any, any>, myFont: any, floors: Record<any, any>, handleAsync: (meshLogo: any) => void) {
     const new_object_id = textLogoNamePrefix + object_id;
-    console.debug({floor_index});
     // deleteMeshByObjectID(new_object_id, scene, floors);
     let result = null;
 

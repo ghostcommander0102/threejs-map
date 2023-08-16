@@ -6,7 +6,6 @@ import {MeshType} from "./getMaterialAndGeometry";
 
 export const getMeshParams = (path: any, paths: SVGResultPaths[], floors: any[], floor_index: number, config: any, nodeCount: number, allNodesFloor: any[], pathFinderGraph: Graph) => {
     const consolePrefix = 'MeshParams';
-
     let mesh_type:MeshType = null;
     var layer_color = path.color;
     var extrude = 0;

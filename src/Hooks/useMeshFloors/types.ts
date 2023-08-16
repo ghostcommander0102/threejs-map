@@ -17,7 +17,9 @@ export interface IMeshParams {
     meshParams: IMeshValues[];
     textParams: { textMesh: IExtMesh }[];
     storeLogos: { storeLogo: IExtMesh }[];
+    floors: any,
     drawText?: Function;
+    pathFinderGraph?: any;
 }
 
 export interface IExtMeshLambertMaterial extends MeshLambertMaterial {

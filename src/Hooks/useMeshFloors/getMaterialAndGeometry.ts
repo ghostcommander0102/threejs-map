@@ -1,8 +1,9 @@
-import {Color, DoubleSide, ExtrudeGeometry, Mesh, MeshLambertMaterial, ShapeGeometry} from "three";
+import {Color, DoubleSide, ExtrudeGeometry, Mesh, MeshLambertMaterial, Raycaster, ShapeGeometry} from "three";
 import {getWallShape} from "./getWallShape";
 import {mergeGeometries} from "three/examples/jsm/utils/BufferGeometryUtils";
-import {allMapObjects} from "./globals";
+import {allMapObjects, allNodesFloor} from "./globals";
 import {IExtMesh, IMeshParams, IMeshValues} from "./types";
+import { assign_route_nodes_to_stores } from "helpers/route.helpers";
 
 function hex_to_color(hex_code: string) {
     return new Color(parseInt('0x' + hex_code, 16));
@@ -30,7 +31,7 @@ const renderOrders = {
 
 export type MeshType = keyof typeof renderOrders | null;
 
-function getRenderOrder(mesh_type: MeshType): number {
+export function getRenderOrder(mesh_type: MeshType): number {
     if (mesh_type !== undefined && mesh_type !== null && renderOrders[mesh_type] !== undefined) {
         return renderOrders[mesh_type];
     }
@@ -38,7 +39,7 @@ function getRenderOrder(mesh_type: MeshType): number {
     return 0;
 }
 
-export const getMaterialAndGeometry = (config: any, mesh_type: MeshType, layer_name: string, layer_color: Color | string, mesh_transparent: boolean, mesh_visible: boolean, z_index: number, extrude: number, line_thickness: number, floors: any, floor_index: number, allIndexedMapObjects: any, path: any): IMeshValues => {
+export const getMaterialAndGeometry = (config: any, mesh_type: MeshType, layer_name: string, layer_color: Color | string, mesh_transparent: boolean, mesh_visible: boolean, z_index: number, extrude: number, line_thickness: number, floors: any, floor_index: number, allIndexedMapObjects: any, allIndexedRetailers: any, path: any): IMeshValues => {
     const consolePrefix = 'MaterialAndGeometry';
 
     const material_settings = {
@@ -151,6 +152,15 @@ export const getMaterialAndGeometry = (config: any, mesh_type: MeshType, layer_n
     mesh.floor_index = floor_index;
     mesh.visible = mesh_visible;
     mesh.position.z = z_index;
+    let storeName = '';
+    if (['retail_name', 'retail_text', 'custom_text'].includes(allIndexedMapObjects[layer_name]?.layer_type)) {
+        if (allIndexedMapObjects[layer_name].layer_type && allIndexedMapObjects[layer_name].layer_type == 'retail_name' && allIndexedMapObjects[layer_name].retailer_id && allIndexedRetailers[allIndexedMapObjects[layer_name].retailer_id]) {
+            storeName = allIndexedRetailers[allIndexedMapObjects[layer_name].retailer_id].retail_name;
+        } else if (['retail_text', 'custom_text'].includes(allIndexedMapObjects[layer_name].layer_type)) {
+            storeName = allIndexedMapObjects[layer_name].custom_text;
+        }
+    }
+    mesh.userData.storeName = storeName;
     if (config.STYLE == '2D') {
         mesh.renderOrder = getRenderOrder(mesh_type);
         if (layer_name.includes('underlay')) {
@@ -192,6 +202,21 @@ export const getMaterialAndGeometry = (config: any, mesh_type: MeshType, layer_n
             // }
         }
     }
+
+    // if (['store', 'big-store'].includes(mesh_type as string)) {
+    //     console.debug({allIndexedMapObjects: allIndexedMapObjects[layer_name]});
+    // }
+    const findStoreNodeRaycaster = new Raycaster(); 
+    assign_route_nodes_to_stores(
+        floor_index,
+        floors,
+        allIndexedMapObjects,
+        allIndexedRetailers,
+        allNodesFloor,
+        [],
+        findStoreNodeRaycaster,
+        config.ROLE
+    );
 
     return {
         mesh,

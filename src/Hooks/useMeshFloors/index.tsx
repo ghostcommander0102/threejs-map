@@ -27,7 +27,7 @@ import {loadFloors} from "./loadFloors";
 import {getWallShape} from "./getWallShape";
 import type {IConfig, IExtMesh, IMeshParams} from "./types";
 import {defaultVars, mapit2DefaultVars} from "./defaults";
-import {allIndexedMapObjects} from "./globals";
+import {allIndexedMapObjects, allIndexedRetailers} from "./globals";
 import {MapIt2Response, MapObj, Settings} from "./mapitApiTypes";
 import {drawTextLogoStoreOnMap, get_store_name_logo_geo} from "helpers/draw.logo.helpers";
 import { FontLoader } from "three/examples/jsm/loaders/FontLoader";
@@ -60,7 +60,6 @@ const defaultMapObjValues = {
 	offsetY: 0,
 };
 
-const allIndexedRetailers = {} as any;
 
 let allNonIndexedMapObjects: MapObj[] = [];
 let textLogoLayerAddedIndex = 0;
@@ -190,6 +189,7 @@ const useMeshFloors = (url: string): IMeshParams => {
     const [meshParams, setMeshParams] = useState<any[]>([]);
     const [textParams, setTextParams] = useState<any[]>([]);
     const [storeLogos, setStoreLogos] = useState<any[]>([]);
+    const [pathFinderGraph, setPathFinderGraph] = useState<any>();
     const GeometriesAndMaterials: any[] = [];
     const result = useLoader(SVGLoader, '/data/mapit2/floor-14.svg');
     const consolePrefix = 'MAPIT2';
@@ -206,7 +206,7 @@ const useMeshFloors = (url: string): IMeshParams => {
 
     useEffect(() => {
         start_the_show(data as MapIt2Response);
-        const GeometriesAndMaterials = loadFloors(floors, floors_loaded, config, result);
+        const { GeometriesAndMaterials, graph } = loadFloors(floors, floors_loaded, config, result);
         const TextsAndLogos:{textMesh:IExtMesh}[] = [];
         allNonIndexedMapObjects.forEach((params) => {
             const textLogoNamePrefix = 'custom-layer-';
@@ -218,14 +218,16 @@ const useMeshFloors = (url: string): IMeshParams => {
         })
         setMeshParams(GeometriesAndMaterials);
         setTextParams(TextsAndLogos);
+        setPathFinderGraph(graph);
     }, []);
-
     return {
         config,
         meshParams,
         textParams,
         storeLogos,
+        floors,
         drawText: (scene: Scene) => drawTextLogoStoreOnMap(allNonIndexedMapObjects, scene, '', allIndexedMapObjects, allIndexedRetailers, config, myFont, floors),
+        pathFinderGraph
     };
 }
 
