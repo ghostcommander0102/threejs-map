@@ -1,13 +1,14 @@
 import {SVGResultPaths} from "three/examples/jsm/loaders/SVGLoader";
 import {Graph} from "ngraph.graph";
-import {Vector3} from "three";
+import {Color, LineCurve, Vector2, Vector3} from "three";
 import {get_node_name} from "./nodesUtils";
 import {MeshType} from "./getMaterialAndGeometry";
+import { IConfig, IFloorData } from "./types";
 
-export const getMeshParams = (path: any, paths: SVGResultPaths[], floors: any[], floor_index: number, config: any, nodeCount: number, allNodesFloor: any[], pathFinderGraph: Graph) => {
+export const getMeshParams = (path: SVGResultPaths, paths: SVGResultPaths[], floors: IFloorData[], floor_index: number, config: IConfig, nodeCount: number, allNodesFloor: Record<string, number>, pathFinderGraph: Graph) => {
     const consolePrefix = 'MeshParams';
     let mesh_type:MeshType = null;
-    var layer_color = path.color;
+    var layer_color: Color | string = path.color.clone();
     var extrude = 0;
     var z_index = 0;
     var mesh_visible = true;
@@ -15,7 +16,7 @@ export const getMeshParams = (path: any, paths: SVGResultPaths[], floors: any[],
     var mesh_transparent = false;
     var line_thickness = config.WALL_THICKNESS;
     var interactiveMesh = true;
-    var layer_name = path.userData.node.id;
+    var layer_name = path.userData?.node.id;
     if (layer_name != undefined) {
         if (layer_name.startsWith('boundary')) {
             mesh_type = 'boundary';
@@ -64,35 +65,39 @@ export const getMeshParams = (path: any, paths: SVGResultPaths[], floors: any[],
         } else if (layer_name.startsWith('route-path')) {
             mesh_type = 'route-path';
             mesh_draw = false;
-            //@ts-ignore
             path.subPaths.forEach(subPath => {
                 if (subPath.curves.length == 0) {
                     console.warn(consolePrefix + 'Route-path standalone anchor point exists, layer_name: "%s"', layer_name);
                 }
-                //@ts-ignore
+
                 subPath.curves.forEach(curve => {
-                    const [node1_name, exists1] = get_node_name(curve.v1, floor_index, floors, nodeCount);
+                    //@ts-ignore
+                    const v1:Vector2 = curve.v1;
+                    //@ts-ignore
+                    const v2:Vector2 = curve.v2;
+
+                    const [node1_name, exists1] = get_node_name(v1, floor_index, floors, nodeCount);
                     if (!exists1) {
-                        floors[floor_index].route_points.push({
+                        floors[floor_index].route_points?.push({
                             name: node1_name,
-                            node: new Vector3(curve.v1.x, curve.v1.y, 1)
+                            node: new Vector3(v1.x, v1.y, 1)
                         });
                         allNodesFloor[node1_name] = floor_index;
                     }
-                    const [node2_name, exists2] = get_node_name(curve.v2, floor_index, floors, nodeCount);
+                    const [node2_name, exists2] = get_node_name(v2, floor_index, floors, nodeCount);
                     if (!exists2) {
-                        floors[floor_index].route_points.push({
+                        floors[floor_index].route_points?.push({
                             name: node2_name,
-                            node: new Vector3(curve.v2.x, curve.v2.y, 1)
+                            node: new Vector3(v2.x, v2.y, 1)
                         });
                         allNodesFloor[node2_name] = floor_index;
                     }
-                    pathFinderGraph.addNode(node1_name, { ...curve.v1 });
-                    pathFinderGraph.addNode(node2_name, { ...curve.v2 });
+                    pathFinderGraph.addNode(node1_name, { ...v1 });
+                    pathFinderGraph.addNode(node2_name, { ...v2 });
 
                     // pathFinderGraph.addLink(node1_name, node2_name);
-                    pathFinderGraph.addLink(node1_name, node2_name, { weight: curve.v1.distanceTo(curve.v2) });
-                    pathFinderGraph.addLink(node2_name, node1_name, { weight: curve.v1.distanceTo(curve.v2) });
+                    pathFinderGraph.addLink(node1_name, node2_name, { weight: v1.distanceTo(v2) });
+                    pathFinderGraph.addLink(node2_name, node1_name, { weight: v1.distanceTo(v2) });
                 });
             });
         } else if (layer_name.startsWith('escalator-')) {
@@ -112,6 +117,8 @@ export const getMeshParams = (path: any, paths: SVGResultPaths[], floors: any[],
         } else {
             extrude = 1;
         }
+    } else {
+        console.warn(consolePrefix + 'Layer name is undefined, path', path)
     }
 
 

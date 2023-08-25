@@ -1,13 +1,30 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
-import MapComponent from './components/MapComponent/MapComponent';
+import './MapBox.css';
 import SceneComponent from './components/SceneComponent/SceneComponent';
+import {isMapIt2Response, MapIt2Response} from "./Hooks/useMeshFloors/mapitApiTypes";
+import {IJsonConfig} from "./Hooks/useMeshFloors/types";
 
-function App() {
+export interface IAppProps {
+    CENTER_ID?: string;
+    mapitData?: unknown;
+    config?: IJsonConfig;
+    stats?: boolean;
+}
+
+function MapBox({ CENTER_ID, mapitData, config, stats }: IAppProps) {
+
+  if (!mapitData && !CENTER_ID) {
+    console.error('Please provide either mapitData or CENTER_ID');
+    return null;
+  }
+  if (!CENTER_ID && !isMapIt2Response(mapitData)) {
+    console.error('mapitData is not a valid MapIt2Response');
+    return null;
+  }
+
   return (
-    <>
-      <SceneComponent />
+    <div style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden"}}>
+      <SceneComponent stats={stats} mapitData={mapitData as MapIt2Response} CENTER_ID={CENTER_ID} config={config} />
       <div className="map_special_images hide">
         <div id="map-special-svg-kiosk">
           <svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 443.83 787.21">
@@ -73,25 +90,8 @@ function App() {
           </svg>
         </div>
       </div>
-    </>
-    // <MapComponent />
-    // <div className="App">
-    //   <header className="App-header">
-    //     <img src={logo} className="App-logo" alt="logo" />
-    //     <p>
-    //       Edit <code>src/App.tsx</code> and save to reload.
-    //     </p>
-    //     <a
-    //       className="App-link"
-    //       href="https://reactjs.org"
-    //       target="_blank"
-    //       rel="noopener noreferrer"
-    //     >
-    //       Learn React
-    //     </a>
-    //   </header>
-    // </div>
+    </div>
   );
 }
 
-export default App;
+export default MapBox;

@@ -1,15 +1,11 @@
 import {useThree} from "@react-three/fiber";
+import { ICameraPropertiesProps } from "Hooks/useMeshFloors/types";
 import {PerspectiveCamera} from "three";
-
-interface ICameraPropertiesProps {
-    far?: number;
-    near?: number;
-    fov?: number;
-}
 
 export const CameraProperties = (props:ICameraPropertiesProps) => {
     const { camera } = useThree();
 
+    const cameraProjectionNeedsUpdate = props.far || props.near || props.fov;
     if (props.far) {
         camera.far = props.far;
     }
@@ -21,6 +17,10 @@ export const CameraProperties = (props:ICameraPropertiesProps) => {
         if (props.fov) {
             camera.fov = props.fov;
         }
+    }
+
+    if (cameraProjectionNeedsUpdate) {
+        camera.updateProjectionMatrix();
     }
 
     return null;

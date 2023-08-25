@@ -2,7 +2,7 @@ import {useThree} from "@react-three/fiber";
 import {Color} from "three";
 
 interface IScenePropertiesProps {
-    background?: string;
+    background?: Color | string;
 }
 
 export const SceneProperties = (params:IScenePropertiesProps) => {

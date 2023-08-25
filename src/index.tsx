@@ -1,16 +1,17 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from './App';
+import MapBox from './MapBox';
 import reportWebVitals from './reportWebVitals';
+import data from './demo/data.json';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+  // <React.StrictMode>
+    <MapBox mapitData={data} stats />
+  // </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function

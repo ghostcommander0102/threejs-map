@@ -2,17 +2,19 @@ import { allIndexedMapObjects } from "Hooks/useMeshFloors/globals";
 import { DoubleSide, MeshPhongMaterial, Mesh, CanvasTexture, MeshBasicMaterial, PlaneGeometry, Vector3, BufferGeometry, Box3, Color, SphereGeometry } from "three";
 import type { Object3D, Scene } from "three";
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
-import {Geometry} from "three/examples/jsm/deprecated/Geometry";
 import {IExtMesh} from "../Hooks/useMeshFloors/types";
+import {getRenderOrder} from "../Hooks/useMeshFloors/getMaterialAndGeometry";
+import {hex_to_color} from "./misc";
+import { IRetailer, MapObj } from "Hooks/useMeshFloors/mapitApiTypes";
 
 
-export function drawTextLogoStoreOnMap(allNonIndexedMapObjects: Record<any, any>[], scene: Scene, textLogoNamePrefix: string, allIndexedMapObjects: Record<any, any>[], allIndexedRetailers: Record<any, any>[], config: Record<any, any>, myFont: any, floors: Record<any, any>[]) {
+export function drawTextLogoStoreOnMap(allNonIndexedMapObjects: Record<any, any>[], scene: Scene, textLogoNamePrefix: string, allIndexedMapObjects: Record<string, MapObj>, allIndexedRetailers: Record<string, IRetailer>, config: Record<any, any>, myFont: any, floors: Record<any, any>[]) {
     for (let textLogoLayerAddedIndex = 0; textLogoLayerAddedIndex < allNonIndexedMapObjects.length; textLogoLayerAddedIndex++) {
         addTextOrLogoOnStore(allNonIndexedMapObjects[textLogoLayerAddedIndex], scene, textLogoNamePrefix, allIndexedMapObjects, allIndexedRetailers, config, myFont, floors);
     }
 }
 
-function addTextOrLogoOnStore(map_obj: any, scene: Scene, textLogoNamePrefix: string, allIndexedMapObjects: Record<any, any>[], allIndexedRetailers: Record<any, any>[], config: Record<any, any>, myFont: any, floors: Record<any, any>[]) {
+function addTextOrLogoOnStore(map_obj: any, scene: Scene, textLogoNamePrefix: string, allIndexedMapObjects: Record<string, MapObj>, allIndexedRetailers: Record<any, any>, config: Record<any, any>, myFont: any, floors: Record<any, any>[]) {
     //@ts-ignore
     let mesh = scene.getObjectByProperty('object_id', map_obj.map_obj_name);
     if (mesh) {
@@ -74,7 +76,7 @@ function layer_text_logo_position_by_id(object_id: string, newMeshPos: Vector3, 
     let offsetX = parseInt(map_obj.offsetX);
     let offsetY = parseInt(map_obj.offsetY);
 
-    newMeshPos.z = mesh_size.z;
+    newMeshPos.z = -mesh_size.z;
 
     //@ts-ignore
     newMesh.obj_angle = parseInt(map_obj.rotate); //-180 to 180
@@ -87,32 +89,6 @@ function layer_text_logo_position_by_id(object_id: string, newMeshPos: Vector3, 
     newMeshPos.y += offsetY;
 
     newMesh.position.set(newMeshPos.x, newMeshPos.y, newMeshPos.z + 1);
-}
-
-function hex_to_color(hex_code: string) {
-    return new Color(parseInt('0x' + hex_code, 16));
-}
-
-function getRenderOrder(mesh_type: string) {
-    const renderOrders = {
-        'underlay': 0,
-        'overlay': 1,
-        'building-base': 1,
-        'base': 2,
-        'store': 3,
-        'big-store': 4,
-        'kiosk': 5,
-        'wall': 6,
-        'outer-wall': 7,
-        'boundary': 8,
-        'amenity': 9,
-        'layer-image': 10,
-        'layer-text': 11,
-        'route-tube': 12,
-        'special-shape': 13,
-    } as Record<string, number>;
-    if (renderOrders[mesh_type]) return renderOrders[mesh_type];
-    return 0;
 }
 
 /*function add_store_name_logo(mesh: Mesh, textLogoNamePrefix: string, allIndexedMapObjects: Record<any, any>, allIndexedRetailers: Record<any, any>, config: Record<any, any>, myFont: any, floors: Record<any, any>, scene: Scene) {
@@ -198,18 +174,15 @@ function getRenderOrder(mesh_type: string) {
     }
 }*/
 
-function getImageLogo(allIndexedRetailers: Record<string, any>, map_obj: Record<string, any>, mesh: BufferGeometry,object_id: string | number, new_object_id: string | null, mesh_center_point: Vector3, mesh_size: Vector3, floors: any, handleAsync: (meshLogo: {storeLogo: Object3D}) => void): void {
-    
-    var c = document.createElement("canvas");
-    var ctx = c.getContext("2d");
+function getImageLogo(allIndexedRetailers: Record<string, any>, map_obj: Record<string, any>, mesh: BufferGeometry,object_id: string, new_object_id: string | null, mesh_center_point: Vector3, mesh_size: Vector3, floors: any, handleAsync: (meshLogo: {storeLogo: Object3D}) => void): void {
 
-    var img = new Image();
+    const img = new Image();
     img.crossOrigin = 'Anonymous';
     if (map_obj.obj_type == 'retailer') {
         img.src = allIndexedRetailers[map_obj.retailer_id].logo;
     } else if (map_obj.obj_type == 'special') {
         
-        var svg_image_name = map_obj.value;
+        let svg_image_name = map_obj.value;
         if (map_obj.layer_type == 'kiosk') svg_image_name = 'kiosk';
         if (svg_image_name) {
             let svg_color = '222222';
@@ -217,50 +190,58 @@ function getImageLogo(allIndexedRetailers: Record<string, any>, map_obj: Record<
                 svg_color = map_obj.text_color;
             }
 
-            document.querySelector('#map-special-svg-' + svg_image_name + ' [fill]')?.setAttribute('fill', '#' + svg_color);
-            //@ts-ignore
-            var svg_html = document.getElementById('map-special-svg-' + svg_image_name).querySelector("svg");
-            //@ts-ignore
-            var svgData = (new XMLSerializer()).serializeToString(svg_html);
-            img.src = "data:image/svg+xml;base64," + window.btoa(unescape(encodeURIComponent(svgData)));
+            const svg_block = document.getElementById('map-special-svg-' + svg_image_name)
+            if (!svg_block) {
+                console.error('svg_block not found', svg_image_name);
+                return;
+            }
+            const svg_element = svg_block.querySelector("svg");
+            if (!svg_element) {
+                console.error('svg_element not found', svg_image_name);
+                return;
+            }
 
-            // img.src = BASE_URL + 'common/svg-image?image=' + allSvgIcons[svg_image_name] + '&color=' + svg_color;
+            const svgColoredParts = svg_element.querySelectorAll('[fill]');
+            svgColoredParts.forEach((svgColoredPart) => {
+                svgColoredPart.setAttribute('fill', '#' + svg_color);
+            })
+
+            const svgData = (new XMLSerializer()).serializeToString(svg_element);
+            img.src = "data:image/svg+xml;base64," + window.btoa(unescape(encodeURIComponent(svgData)));
         }
         
     } else {
         img.src = map_obj.custom_image;
    }
     img.onload = function () {
+        const c = document.createElement("canvas");
+        const ctx = c.getContext("2d");
 
-        //@ts-ignore
-        c.width = this.width;
-        //@ts-ignore
-        c.height = this.height;
+        c.width = img.width;
+        c.height = img.height;
 
         ctx?.drawImage(img, 0, 0);
 
         let texture = new CanvasTexture(c);
-        //@ts-ignore
-        var geometry = new PlaneGeometry(map_obj.size, map_obj.size * this.height / this.width);
-        var material = new MeshBasicMaterial({
+        texture.colorSpace = 'srgb'
+
+        const geometry = new PlaneGeometry(map_obj.size, map_obj.size * img.height / img.width);
+        const material = new MeshBasicMaterial({
             map: texture,
             transparent: true,
             side: DoubleSide,
             depthTest: false,
             depthWrite: false,
         });
-        var logoMesh = new Mesh(geometry, material);
-        //@ts-ignore
+        const logoMesh = new Mesh(geometry, material) as IExtMesh;
+
+        // @ts-ignore
+        const floor_index = mesh.floor_index;
         layer_text_logo_position_by_id(object_id, mesh_center_point, mesh_size, logoMesh, allIndexedMapObjects);
-        // layer_text_logo_position(mesh, mesh_center_point, mesh_size, logoMesh, allIndexedMapObjects);
-        //@ts-ignore
-        // logoMesh.object_id = new_object_id;
         logoMesh.object_id = new_object_id;
-        //@ts-ignore
-        logoMesh.floor_index = mesh.floor_index;
+        logoMesh.floor_index = floor_index;
         logoMesh.renderOrder = getRenderOrder('layer-image');
-        //@ts-ignore
-        floors[mesh.floor_index]?.objsGroup.add(logoMesh);
+        floors[floor_index]?.objsGroup.add(logoMesh);
 
         /*const wireframeMaterial = new MeshBasicMaterial({
             color: 0x0000ff,
@@ -284,7 +265,7 @@ function getImageLogo(allIndexedRetailers: Record<string, any>, map_obj: Record<
 
 
 
-export function get_store_name_logo_geo(geometry: BufferGeometry, object_id:string, floor_index: number, textLogoNamePrefix: string, allIndexedMapObjects: Record<any, any>, allIndexedRetailers: Record<any, any>, config: Record<any, any>, myFont: any, floors: Record<any, any>, handleAsync: (meshLogo: any) => void) {
+export function get_store_name_logo_geo(geometry: BufferGeometry, object_id:string, floor_index: number, textLogoNamePrefix: string, allIndexedMapObjects: Record<any, any>, allIndexedRetailers: Record<any, any>, config: Record<any, any>, myFont: any, floors: Record<any, any>, handleAsync: (meshLogo: any) => void): {textMesh: IExtMesh} | null | false {
     const new_object_id = textLogoNamePrefix + object_id;
     // deleteMeshByObjectID(new_object_id, scene, floors);
     let result = null;

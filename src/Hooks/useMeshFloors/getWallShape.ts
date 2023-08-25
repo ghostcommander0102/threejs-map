@@ -1,6 +1,6 @@
-import {Shape, Vector3} from "three";
+import {LineCurve, Shape, Vector3} from "three";
 
-export function getWallShape(curve: any, thickness = 3, shape_extend = 0) {
+export function getWallShape(curve: LineCurve, thickness = 3, shape_extend = 0) {
     let wallShape = new Shape();
     let point1 = new Vector3(curve.v1.x, curve.v1.y, 0);
     let point2 = new Vector3(curve.v2.x, curve.v2.y, 0);

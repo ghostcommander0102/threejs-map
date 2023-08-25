@@ -8,6 +8,11 @@ export function get_camera_focus_object(objs:Mesh[], fov:number, aspectRatio: nu
     if (!Array.isArray(objs)) {
         objs = [objs];
     }
+    if (!objs.length) {
+        console.warn('get_camera_focus_object: no objects passed');
+        return { position: new Vector3(), target: new Vector3() };
+    }
+
     const objsBoundingBox = objs.reduce((box, obj) => {
         if (!obj.geometry.boundingBox) {
             obj.geometry.computeBoundingBox();

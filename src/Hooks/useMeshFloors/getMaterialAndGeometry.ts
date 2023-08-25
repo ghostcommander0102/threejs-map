@@ -1,13 +1,12 @@
-import {Color, DoubleSide, ExtrudeGeometry, Mesh, MeshLambertMaterial, Raycaster, ShapeGeometry} from "three";
+import {BackSide, Color, DoubleSide, ExtrudeGeometry, Mesh, MeshLambertMaterial, ShapeGeometry, Vector3} from "three";
 import {getWallShape} from "./getWallShape";
 import {mergeGeometries} from "three/examples/jsm/utils/BufferGeometryUtils";
-import {allMapObjects, allNodesFloor} from "./globals";
-import {IExtMesh, IMeshParams, IMeshValues} from "./types";
-import { assign_route_nodes_to_stores } from "helpers/route.helpers";
+import {allMapObjects} from "./globals";
+import {IConfig, IExtMesh, IMeshValues} from "./types";
+import {hex_to_color} from "../../helpers/misc";
 
-function hex_to_color(hex_code: string) {
-    return new Color(parseInt('0x' + hex_code, 16));
-}
+import {IRetailer, MapObj} from "./mapitApiTypes";
+
 
 const renderOrders = {
     'route-path': 0,
@@ -35,20 +34,20 @@ export function getRenderOrder(mesh_type: MeshType): number {
     if (mesh_type !== undefined && mesh_type !== null && renderOrders[mesh_type] !== undefined) {
         return renderOrders[mesh_type];
     }
-    console.warn(`Unknown mesh type: ${mesh_type}`)
+    // console.warn(`Unknown mesh type: ${mesh_type}`)
     return 0;
 }
 
-export const getMaterialAndGeometry = (config: any, mesh_type: MeshType, layer_name: string, layer_color: Color | string, mesh_transparent: boolean, mesh_visible: boolean, z_index: number, extrude: number, line_thickness: number, floors: any, floor_index: number, allIndexedMapObjects: any, allIndexedRetailers: any, path: any): IMeshValues => {
+export const getMaterialAndGeometry = (config: IConfig, mesh_type: MeshType, layer_name: string, layer_color: Color | string, mesh_transparent: boolean, mesh_visible: boolean, z_index: number, extrude: number, line_thickness: number, floors: any, floor_index: number, allIndexedMapObjects: Record<string, MapObj>, allIndexedRetailers: Record<string, IRetailer>, path: any): IMeshValues => {
     const consolePrefix = 'MaterialAndGeometry';
 
     const material_settings = {
         color: layer_color instanceof Color ? layer_color : hex_to_color(layer_color),
         side: DoubleSide,
         transparent: false,
-        depthWrite: true as boolean | undefined,
-        depthTest: true as boolean | undefined,
-        opacity: 1 as number | undefined,
+        depthWrite: true,
+        depthTest: true,
+        opacity: 1,
     }
     if (config.STYLE == '2D' || mesh_type == 'base' || mesh_type == null) {
         if (mesh_type != 'boundary') {
@@ -77,9 +76,10 @@ export const getMaterialAndGeometry = (config: any, mesh_type: MeshType, layer_n
     }
     if (config.ROLE != 'PORTAL' && mesh_transparent) {
         material.opacity = 0;
+        material.transparent = true;
     }
 
-    material.opacity = material_settings.transparent !== true? 0 : 1;
+    material.transparent = material.opacity !== 1;
 
     let shapes = path.toShapes(true);
 
@@ -96,7 +96,7 @@ export const getMaterialAndGeometry = (config: any, mesh_type: MeshType, layer_n
     var geometry;
     if (mesh_type && extrude_meshes.includes(mesh_type)) {
         geometry = new ExtrudeGeometry(shapes, {
-            depth: extrude,
+            depth: -extrude,
             bevelEnabled: false,
         });
     } else if (mesh_type && wall_meshes.includes(mesh_type)) {
@@ -115,7 +115,7 @@ export const getMaterialAndGeometry = (config: any, mesh_type: MeshType, layer_n
                     }
                     let shape1 = getWallShape(curve, line_thickness, shape_extend);
                     let wall_geometry = new ExtrudeGeometry(shape1, {
-                        depth: extrude,
+                        depth: -extrude,
                         bevelEnabled: false,
                     });
                     wall_geometries.push(wall_geometry);
@@ -163,7 +163,7 @@ export const getMaterialAndGeometry = (config: any, mesh_type: MeshType, layer_n
     mesh.userData.storeName = storeName;
     if (config.STYLE == '2D') {
         mesh.renderOrder = getRenderOrder(mesh_type);
-        if (layer_name.includes('underlay')) {
+        if (layer_name && layer_name.includes('underlay')) {
             mesh.renderOrder = getRenderOrder('underlay');
         }
     }
@@ -206,17 +206,6 @@ export const getMaterialAndGeometry = (config: any, mesh_type: MeshType, layer_n
     // if (['store', 'big-store'].includes(mesh_type as string)) {
     //     console.debug({allIndexedMapObjects: allIndexedMapObjects[layer_name]});
     // }
-    const findStoreNodeRaycaster = new Raycaster(); 
-    assign_route_nodes_to_stores(
-        floor_index,
-        floors,
-        allIndexedMapObjects,
-        allIndexedRetailers,
-        allNodesFloor,
-        [],
-        findStoreNodeRaycaster,
-        config.ROLE
-    );
 
     return {
         mesh,
