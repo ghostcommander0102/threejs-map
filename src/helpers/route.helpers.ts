@@ -1,29 +1,25 @@
 import {
-    CurvePath,
-    Vector3,
-    LineCurve3,
-    TubeGeometry,
     BufferGeometry,
-    MeshBasicMaterial,
-    DoubleSide,
-    Mesh,
     CanvasTexture,
     Color,
-    Scene,
-    PerspectiveCamera,
-    Raycaster,
+    CurvePath,
+    DoubleSide,
+    LineCurve3,
+    Mesh,
+    MeshBasicMaterial,
     Object3D,
+    Raycaster,
+    Scene,
+    TubeGeometry,
+    Vector3,
 } from "three";
-import { getRenderOrder } from "Hooks/useMeshFloors/getMaterialAndGeometry";
-import { get_camera_focus_object } from "./camera.helpers";
-import { defaultVars, mapit2DefaultVars } from "Hooks/useMeshFloors/defaults";
-import { allNodesFloor } from "Hooks/useMeshFloors/globals";
+import {getRenderOrder} from "Hooks/useMeshFloors/getMaterialAndGeometry";
+import {allNodesFloor} from "../globals";
 import * as ngraphPath from "ngraph.path";
-import { IRetailer, MapObj } from "Hooks/useMeshFloors/mapitApiTypes";
-import { IExtMesh, IFloorData } from "Hooks/useMeshFloors/types";
-import { Camera } from "@react-three/fiber";
-import { Graph, Node } from "ngraph.graph";
-import { PathFinder } from "ngraph.path";
+import {PathFinder} from "ngraph.path";
+import {IRetailer, MapObj} from "../mapitApiTypes";
+import {IExtMesh, IFloorData} from "../types";
+import {Graph, Node} from "ngraph.graph";
 
 const consolePrefix = 'ROUTE: ';
 let route_exists = null;

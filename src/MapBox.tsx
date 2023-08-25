@@ -1,8 +1,8 @@
 import React from 'react';
 import './MapBox.css';
 import SceneComponent from './components/SceneComponent/SceneComponent';
-import {isMapIt2Response, MapIt2Response} from "./Hooks/useMeshFloors/mapitApiTypes";
-import {IJsonConfig} from "./Hooks/useMeshFloors/types";
+import {isMapIt2Response, MapIt2Response} from "./mapitApiTypes";
+import {IJsonConfig} from "./types";
 
 export interface IAppProps {
     CENTER_ID?: string;

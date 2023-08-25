@@ -1,7 +1,7 @@
 import {getMeshParams} from "./getMeshParams";
 import {SVGResult} from "three/examples/jsm/loaders/SVGLoader";
-import {IConfig, IFloorData, IMeshValues} from "./types";
-import {allIndexedMapObjects, allIndexedRetailers, allNodesFloor, pathFinderGraph} from "./globals";
+import {IConfig, IFloorData, IMeshValues} from "../../types";
+import {allIndexedMapObjects, allIndexedRetailers, allNodesFloor, pathFinderGraph} from "../../globals";
 import {getMaterialAndGeometry} from "./getMaterialAndGeometry";
 import {Raycaster} from "three";
 import {assign_route_nodes_to_stores, linkFloorEscalators} from "helpers/route.helpers";

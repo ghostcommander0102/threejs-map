@@ -1,5 +1,5 @@
 import {useThree} from "@react-three/fiber";
-import { ICameraPropertiesProps } from "Hooks/useMeshFloors/types";
+import { ICameraPropertiesProps } from "types";
 import {PerspectiveCamera} from "three";
 
 export const CameraProperties = (props:ICameraPropertiesProps) => {

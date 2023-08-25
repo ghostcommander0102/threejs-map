@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {MapIt2Response} from "./Hooks/useMeshFloors/mapitApiTypes";
+import {MapIt2Response} from "./mapitApiTypes";
 
 interface useMapIt2DataProps {
     CENTER_ID?: string;

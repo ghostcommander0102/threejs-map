@@ -1,5 +1,5 @@
 import type {Vector2} from "three";
-import {IFloorData} from "./types";
+import {IFloorData} from "../../types";
 
 export function next_node_name(node_count: number) {
     return 'node-' + node_count;

@@ -1,4 +1,4 @@
-import {IExtMesh, IFloorData, IMeshParams} from "../../Hooks/useMeshFloors/types";
+import {IExtMesh, IFloorData, IMeshParams} from "../../types";
 import {Map} from "./Map";
 import React, {MouseEventHandler, useCallback, useEffect, useRef, useState} from "react";
 import {Group, Mesh, PerspectiveCamera, Vector3} from "three";
@@ -6,7 +6,8 @@ import {ThreeEvent, useThree} from "@react-three/fiber";
 import {get_camera_focus_object} from "../../helpers/camera.helpers";
 import {MapControls} from "@react-three/drei";
 import {create_route, make_amenity_route} from "../../helpers/route.helpers";
-import {allIndexedMapObjects} from "Hooks/useMeshFloors/globals";
+import {allIndexedMapObjects} from "../../globals";
+import { IZoomData } from "./SceneComponent";
 
 interface IFloorsMapProps {
     meshFloors: IMeshParams;
@@ -23,11 +24,12 @@ interface IFloorsMapProps {
     hoverObjectId?: string;
     handleChangeFloor: (index: number) => MouseEventHandler<HTMLDivElement>,
     escalatorNodes: string[];
+    zoom: IZoomData | null;
 }
 
 
 export const FloorsMap = (params:IFloorsMapProps) => {
-    const { meshFloors, currentFloorIndex, currKioskObj, routeTargetId, amenityTargetType, handleChangeFloor, escalatorNodes } = params;
+    const { meshFloors, currentFloorIndex, currKioskObj, routeTargetId, amenityTargetType, handleChangeFloor, escalatorNodes, zoom } = params;
     const { floors } = meshFloors;
 
     const groupRef = useRef<Group>(null);
@@ -132,6 +134,21 @@ export const FloorsMap = (params:IFloorsMapProps) => {
             cameraFocus.current = null;
         };
     }, [ routeTubes, selectedFloorMeshParams, currentFloorIndex, style, camera, routeTargetId ]);
+
+    useEffect(() => {
+        if (zoom?.direction && mapControlRef.current) {
+            const vector = new Vector3();
+            vector.copy(mapControlRef.current.target);
+            vector.sub(mapControlRef.current.object.position);
+            vector.setLength(vector.length() * 0.4);
+
+            if (zoom.direction === 'in') {
+                camera.position.add(vector);
+            } else {
+                camera.position.sub(vector);
+            }
+        }
+    }, [zoom])
 
     const onCameraMove = useCallback((e: any) => {
         // console.warn('onCameraMove', e);

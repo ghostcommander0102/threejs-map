@@ -1,5 +1,4 @@
-import {IConfig, IJsonConfig} from "./types";
-import {Settings} from "./mapitApiTypes";
+import {IJsonConfig} from "./types";
 
 export const mapit2DefaultVars: Partial<IJsonConfig> = {
     ROLE: 'WEBSITE',
@@ -7,7 +6,7 @@ export const mapit2DefaultVars: Partial<IJsonConfig> = {
     CENTER_ID: '8',
     KIOSK: '51',
     STYLE: '3D',
-    DEFAULT_SELECTED_STORE: 'store-816',
+    DEFAULT_SELECTED_STORE: '',
     DEBUG: '1',
 
     MAP_BACKGROUND_COLOR: "FFFFFF",

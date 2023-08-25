@@ -4,10 +4,10 @@ import useMeshFloors from "Hooks/useMeshFloors";
 import {SceneProperties} from "./SceneProperties";
 import {CameraProperties} from "./CameraProperties";
 import {Mesh, Object3D} from "three";
-import {IAmenitiesInteractiveList, IExtMesh, IJsonConfig, IMeshParams} from "Hooks/useMeshFloors/types";
+import {IAmenitiesInteractiveList, IExtMesh, IJsonConfig, IMeshParams} from "types";
 import {FloorsMap} from "./FloorsMap";
 import {useMapit2Data} from "../../useMapit2Data";
-import {MapIt2Response} from "../../Hooks/useMeshFloors/mapitApiTypes";
+import {MapIt2Response} from "../../mapitApiTypes";
 import { Stats } from '@react-three/drei';
 import UIComponent from "components/UIComponent";
 import {MapCenterMarker} from "./MapCenterMarker";
@@ -54,11 +54,16 @@ interface ISceneComponentProps {
     stats?: boolean;
 }
 
+export interface IZoomData {
+    direction: 'in' | 'out';
+}
+
 const SceneComponent = (params:ISceneComponentProps) => {
     const data = useMapit2Data({ mapitData:params.mapitData, CENTER_ID: params.CENTER_ID });
     const [selectedFloorIndex, setSelectedFloorIndex] = useState<number>(-1);
     const [selectedActiveObjectId, setSelectedActiveObjectId] = useState<string>('');
     const [amenityTargetType, setAmenityTargetType] = useState<string>('');
+    const [zoom, setZoom] = useState<IZoomData | null>(null);
 
     const handleFloorChange = (floorIndex: number): MouseEventHandler<HTMLDivElement> => (e) => {
         setSelectedFloorIndex(floorIndex);
@@ -212,7 +217,7 @@ const SceneComponent = (params:ISceneComponentProps) => {
 
     return (
         <>
-            <UIComponent accentColor={config.ACCENT_COLOR.getStyle()} floors={floors.length} selectedFloorIndex={currentFloorIndex} handleFloorChange={handleFloorChange} amenitiesList={amenitiesList} handleAmenityClick={handleAmenityClick} reset={resetHandle} />
+            <UIComponent accentColor={config.ACCENT_COLOR.getStyle()} floors={floors.length} selectedFloorIndex={currentFloorIndex} handleFloorChange={handleFloorChange} amenitiesList={amenitiesList} handleAmenityClick={handleAmenityClick} reset={resetHandle} zoomIn={() => setZoom({direction: 'in'})} zoomOut={() => setZoom({direction: 'out'})} />
             <Canvas flat>
                 {params.stats? <Stats /> : null }
                 <SceneProperties background={config.MAP_BACKGROUND_COLOR} />
@@ -239,6 +244,7 @@ const SceneComponent = (params:ISceneComponentProps) => {
                     handleChangeFloor={handleFloorChange}
                     amenityTargetType={amenityTargetType}
                     escalatorNodes={meshFloors.escalator_nodes}
+                    zoom={zoom}
                 />
             </Canvas>
             <div ref={labelRef}

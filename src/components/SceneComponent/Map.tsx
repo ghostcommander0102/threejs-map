@@ -1,6 +1,6 @@
-import {IMeshParams} from "../../Hooks/useMeshFloors/types";
+import {IMeshParams} from "../../types";
 import {ThreeEvent} from "@react-three/fiber";
-import React, {MouseEventHandler, useCallback} from "react";
+import React, {MouseEventHandler} from "react";
 import {Mesh, MeshLambertMaterial, MeshStandardMaterial, RGB} from "three";
 import {RouteTube} from "./RouteTube";
 import {Html} from "@react-three/drei";

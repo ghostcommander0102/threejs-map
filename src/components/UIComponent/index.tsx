@@ -1,4 +1,4 @@
-import { IAmenitiesInteractiveList, IFloorSelectorProps } from "Hooks/useMeshFloors/types"
+import { IAmenitiesInteractiveList, IFloorSelectorProps } from "types"
 import FloorSelector from "./FloorSelector"
 import { MouseEventHandler } from "react";
 

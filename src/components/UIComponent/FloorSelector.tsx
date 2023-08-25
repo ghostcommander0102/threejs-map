@@ -1,4 +1,4 @@
-import { IFloorSelectorProps } from "Hooks/useMeshFloors/types";
+import { IFloorSelectorProps } from "types";
 
 const FloorSelector = ({floors, selectedFloorIndex, handleFloorChange, accentColor}: IFloorSelectorProps) => {
     const floorButtons = [];

@@ -3,7 +3,7 @@ import {Graph} from "ngraph.graph";
 import {Color, LineCurve, Vector2, Vector3} from "three";
 import {get_node_name} from "./nodesUtils";
 import {MeshType} from "./getMaterialAndGeometry";
-import { IConfig, IFloorData } from "./types";
+import { IConfig, IFloorData } from "../../types";
 
 export const getMeshParams = (path: SVGResultPaths, paths: SVGResultPaths[], floors: IFloorData[], floor_index: number, config: IConfig, nodeCount: number, allNodesFloor: Record<string, number>, pathFinderGraph: Graph) => {
     const consolePrefix = 'MeshParams';

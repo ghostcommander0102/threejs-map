@@ -1,11 +1,11 @@
 import {BackSide, Color, DoubleSide, ExtrudeGeometry, Mesh, MeshLambertMaterial, ShapeGeometry, Vector3} from "three";
 import {getWallShape} from "./getWallShape";
 import {mergeGeometries} from "three/examples/jsm/utils/BufferGeometryUtils";
-import {allMapObjects} from "./globals";
-import {IConfig, IExtMesh, IMeshValues} from "./types";
+import {allMapObjects} from "../../globals";
+import {IConfig, IExtMesh, IMeshValues} from "../../types";
 import {hex_to_color} from "../../helpers/misc";
 
-import {IRetailer, MapObj} from "./mapitApiTypes";
+import {IRetailer, MapObj} from "../../mapitApiTypes";
 
 
 const renderOrders = {

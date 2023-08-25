@@ -1,11 +1,11 @@
-import { allIndexedMapObjects } from "Hooks/useMeshFloors/globals";
+import { allIndexedMapObjects } from "../globals";
 import { DoubleSide, MeshPhongMaterial, Mesh, CanvasTexture, MeshBasicMaterial, PlaneGeometry, Vector3, BufferGeometry, Box3, Color, SphereGeometry } from "three";
 import type { Object3D, Scene } from "three";
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
-import {IExtMesh} from "../Hooks/useMeshFloors/types";
+import {IExtMesh} from "../types";
 import {getRenderOrder} from "../Hooks/useMeshFloors/getMaterialAndGeometry";
 import {hex_to_color} from "./misc";
-import { IRetailer, MapObj } from "Hooks/useMeshFloors/mapitApiTypes";
+import { IRetailer, MapObj } from "../mapitApiTypes";
 
 
 export function drawTextLogoStoreOnMap(allNonIndexedMapObjects: Record<any, any>[], scene: Scene, textLogoNamePrefix: string, allIndexedMapObjects: Record<string, MapObj>, allIndexedRetailers: Record<string, IRetailer>, config: Record<any, any>, myFont: any, floors: Record<any, any>[]) {
