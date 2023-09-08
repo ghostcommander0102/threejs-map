@@ -1,6 +1,6 @@
 {
-  "name": "center-portal-map-pkg",
-  "version": "1.4.32",
+  "name": "center-portal-threemap",
+  "version": "1.0.0",
   "type": "module",
   "source": "src/index.ts",
   "main": "dist/index.js",
