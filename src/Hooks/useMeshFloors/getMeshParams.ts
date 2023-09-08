@@ -1,4 +1,5 @@
-import {SVGResultPaths} from "three/examples/jsm/loaders/SVGLoader";
+// import {SVGResultPaths} from "three/examples/jsm/loaders/SVGLoader";
+import { SVGResultPaths } from "three-stdlib";
 import {Graph} from "ngraph.graph";
 import {Color, LineCurve, Vector2, Vector3} from "three";
 import {get_node_name} from "./nodesUtils";

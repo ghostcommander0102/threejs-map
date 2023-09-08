@@ -15,7 +15,6 @@ export function RouteTube({mesh}: IRouteTubeProps) {
         if (!mesh) {
             return;
         }
-        console.debug({animate: mesh});
 
         if (!mesh.geometry.index?.count) {
             console.log('NO ROUTE TUBE GEOMETRY INDEX COUNT');

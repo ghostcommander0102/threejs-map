@@ -1,8 +1,9 @@
 import {BackSide, Color, DoubleSide, ExtrudeGeometry, Mesh, MeshLambertMaterial, ShapeGeometry, Vector3} from "three";
 import {getWallShape} from "./getWallShape";
-import {mergeGeometries} from "three/examples/jsm/utils/BufferGeometryUtils";
+// import {mergeGeometries} from "three/examples/jsm/utils/BufferGeometryUtils";
+import { mergeBufferGeometries as mergeGeometries } from "three-stdlib";
 import {allMapObjects} from "../../globals";
-import {IConfig, IExtMesh, IMeshValues} from "../../types";
+import {IConfig, IExtMesh, IMeshValues, TMapMode} from "../../types";
 import {hex_to_color} from "../../helpers/misc";
 
 import {IRetailer, MapObj} from "../../mapitApiTypes";
@@ -38,7 +39,7 @@ export function getRenderOrder(mesh_type: MeshType): number {
     return 0;
 }
 
-export const getMaterialAndGeometry = (config: IConfig, mesh_type: MeshType, layer_name: string, layer_color: Color | string, mesh_transparent: boolean, mesh_visible: boolean, z_index: number, extrude: number, line_thickness: number, floors: any, floor_index: number, allIndexedMapObjects: Record<string, MapObj>, allIndexedRetailers: Record<string, IRetailer>, path: any): IMeshValues => {
+export const getMaterialAndGeometry = (config: IConfig, mesh_type: MeshType, layer_name: string, layer_color: Color | string, mesh_transparent: boolean, mesh_visible: boolean, z_index: number, extrude: number, line_thickness: number, floors: any, floor_index: number, allIndexedMapObjects: Record<string, MapObj>, allIndexedRetailers: Record<string, IRetailer>, path: any, mode?: TMapMode): IMeshValues => {
     const consolePrefix = 'MaterialAndGeometry';
 
     const material_settings = {
@@ -195,7 +196,9 @@ export const getMaterialAndGeometry = (config: IConfig, mesh_type: MeshType, lay
             (config.ROLE == 'PORTAL') ||
             (config.ROLE != 'PORTAL' && mesh_type == 'kiosk') ||
             (config.ROLE != 'PORTAL' && config.ROLE != 'PORTAL_KIOSK' && allIndexedMapObjects[layer_name] && allIndexedMapObjects[layer_name].obj_type == 'retailer' && allIndexedMapObjects[layer_name].retailer_id != null) ||
-            (config.ROLE != 'PORTAL' && config.ROLE != 'PORTAL_KIOSK' && allIndexedMapObjects[layer_name] && allIndexedMapObjects[layer_name].layer_type == 'amenity' && allIndexedMapObjects[layer_name].value != '')
+            (config.ROLE != 'PORTAL' && config.ROLE != 'PORTAL_KIOSK' && allIndexedMapObjects[layer_name] && allIndexedMapObjects[layer_name].layer_type == 'amenity' && allIndexedMapObjects[layer_name].value != '') ||
+            (mode === 'edit' && (allIndexedMapObjects[layer_name]) && (allIndexedMapObjects[layer_name].obj_type === 'special' || allIndexedMapObjects[layer_name].obj_type === 'custom')) ||
+            (mode === 'edit' && ['store', 'kiosk', 'amenity'].includes(mesh.mesh_type?? ''))
         ) {
             // if (interactiveMesh) {
             floors[floor_index].interactiveObjs.push(mesh);

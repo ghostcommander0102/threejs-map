@@ -1,7 +1,8 @@
 import { allIndexedMapObjects } from "../globals";
 import { DoubleSide, MeshPhongMaterial, Mesh, CanvasTexture, MeshBasicMaterial, PlaneGeometry, Vector3, BufferGeometry, Box3, Color, SphereGeometry } from "three";
 import type { Object3D, Scene } from "three";
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
+// import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
+import { TextGeometry } from "three-stdlib";
 import {IExtMesh} from "../types";
 import {getRenderOrder} from "../Hooks/useMeshFloors/getMaterialAndGeometry";
 import {hex_to_color} from "./misc";
@@ -320,10 +321,14 @@ export function get_store_name_logo_geo(geometry: BufferGeometry, object_id:stri
         text_geometry.center();
 
         const textMesh = new Mesh(text_geometry, text_material) as IExtMesh;
+        textMesh.userData.font = myFont;
         layer_text_logo_position_by_id(object_id, mesh_center_point, mesh_size, textMesh, allIndexedMapObjects);
         textMesh.object_id = new_object_id;
         textMesh.floor_index = floor_index;
         textMesh.renderOrder = getRenderOrder('layer-text');
+        if (map_obj.layer_type === 'retail_name') {
+            textMesh.userData.retail_name = text;
+        }
 
         floors[floor_index].objsGroup.add(textMesh);
 

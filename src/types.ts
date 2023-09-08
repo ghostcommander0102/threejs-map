@@ -172,3 +172,5 @@ export interface IAmenitiesInteractiveList {
     imageUrl: string,
     type: string;
 }
+
+export type TMapMode = 'view' | 'edit';

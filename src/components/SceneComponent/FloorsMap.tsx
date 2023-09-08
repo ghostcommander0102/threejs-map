@@ -1,4 +1,4 @@
-import {IExtMesh, IFloorData, IMeshParams} from "../../types";
+import {IExtMesh, IFloorData, IMeshParams, TMapMode} from "../../types";
 import {Map} from "./Map";
 import React, {MouseEventHandler, useCallback, useEffect, useRef, useState} from "react";
 import {Group, Mesh, PerspectiveCamera, Vector3} from "three";
@@ -25,11 +25,12 @@ interface IFloorsMapProps {
     handleChangeFloor: (index: number) => MouseEventHandler<HTMLDivElement>,
     escalatorNodes: string[];
     zoom: IZoomData | null;
+    mode?: TMapMode;
 }
 
 
 export const FloorsMap = (params:IFloorsMapProps) => {
-    const { meshFloors, currentFloorIndex, currKioskObj, routeTargetId, amenityTargetType, handleChangeFloor, escalatorNodes, zoom } = params;
+    const { meshFloors, currentFloorIndex, currKioskObj, routeTargetId, amenityTargetType, handleChangeFloor, escalatorNodes, zoom, mode } = params;
     const { floors } = meshFloors;
 
     const groupRef = useRef<Group>(null);
@@ -44,7 +45,16 @@ export const FloorsMap = (params:IFloorsMapProps) => {
     const from = (currKioskObj as IExtMesh).object_id;
 
     useEffect(() => {
-        if (!amenityTargetType) {
+        (() => {
+            let n = 0;
+            scene.traverse(() => ++n);
+
+            console.debug('Count:', n);
+        })()
+    }, [params.meshFloors, scene])
+
+    useEffect(() => {
+        if (!amenityTargetType || mode === 'edit') {
             setRouteTubes([]);
             return;
         }
@@ -53,7 +63,7 @@ export const FloorsMap = (params:IFloorsMapProps) => {
     }, [amenityTargetType, scene, pathFinderGraph, floors, escalatorNodes, style, from])
 
     useEffect(() => {
-        if (!from || !routeTargetId) {
+        if (!from || !routeTargetId || mode === 'edit') {
             setRouteTubes([]);
             return;
         }
@@ -88,6 +98,7 @@ export const FloorsMap = (params:IFloorsMapProps) => {
 
     const selectedFloorMeshParams = meshFloors.meshParams[currentFloorIndex];
     useEffect(() => {
+
         if (!(camera instanceof PerspectiveCamera)) {
             console.error('Camera is not a PerspectiveCamera');
             return;
@@ -122,7 +133,6 @@ export const FloorsMap = (params:IFloorsMapProps) => {
             targetTime: targetDistance/targetSpeed/1000, // how long it takes to move camera to get to new position
         };
         // console.log({focus, meshes, camera});
-
 
         mapControlRef.current.target.copy(focus.target);
         mapControlRef.current.object.position.copy(focus.position);
@@ -200,6 +210,7 @@ export const FloorsMap = (params:IFloorsMapProps) => {
                     onPointerMove={params.onPointerMove}
                     onClick={params.onClick}
                     handleChangeFloor={handleChangeFloor}
+                    mode={mode}
                 />
             ))}
         </>

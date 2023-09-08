@@ -1,10 +1,10 @@
 import React, {MouseEventHandler, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {Canvas, ThreeEvent, useThree} from "@react-three/fiber";
-import useMeshFloors from "Hooks/useMeshFloors";
+import useMeshFloors, { textLogoNamePrefix } from "Hooks/useMeshFloors";
 import {SceneProperties} from "./SceneProperties";
 import {CameraProperties} from "./CameraProperties";
 import {Mesh, Object3D} from "three";
-import {IAmenitiesInteractiveList, IExtMesh, IJsonConfig, IMeshParams} from "types";
+import {IAmenitiesInteractiveList, IExtMesh, IJsonConfig, IMeshParams, TMapMode} from "types";
 import {FloorsMap} from "./FloorsMap";
 import {useMapit2Data} from "../../useMapit2Data";
 import {MapIt2Response} from "../../mapitApiTypes";
@@ -12,6 +12,9 @@ import { Stats } from '@react-three/drei';
 import UIComponent from "components/UIComponent";
 import {MapCenterMarker} from "./MapCenterMarker";
 import { delete_route_path } from "helpers/route.helpers";
+import { useMeshObjectContext } from "contexts/MeshObjectContextProvider";
+import MapboxForm from "components/MapboxForm/MapboxForm";
+import styles from '../../MapBox.module.css';
 
 
 const amenitiesList: IAmenitiesInteractiveList[] = [
@@ -52,6 +55,10 @@ interface ISceneComponentProps {
     mapitData?: MapIt2Response;
     config?: IJsonConfig;
     stats?: boolean;
+    selectedActiveObjectId: string;
+    setSelectedActiveObjectId: React.Dispatch<React.SetStateAction<string>>;
+    mode?: TMapMode;
+    handleChangeMapitData: (data: unknown) => void;
 }
 
 export interface IZoomData {
@@ -61,21 +68,28 @@ export interface IZoomData {
 const SceneComponent = (params:ISceneComponentProps) => {
     const data = useMapit2Data({ mapitData:params.mapitData, CENTER_ID: params.CENTER_ID });
     const [selectedFloorIndex, setSelectedFloorIndex] = useState<number>(-1);
-    const [selectedActiveObjectId, setSelectedActiveObjectId] = useState<string>('');
+
+    const { selectedActiveObjectId, setSelectedActiveObjectId } = params;
+
     const [amenityTargetType, setAmenityTargetType] = useState<string>('');
     const [zoom, setZoom] = useState<IZoomData | null>(null);
 
     const handleFloorChange = (floorIndex: number): MouseEventHandler<HTMLDivElement> => (e) => {
         setSelectedFloorIndex(floorIndex);
     }
-    const meshFloors = useMeshFloors(data, params.config);
+
+    const { mode, handleChangeMapitData } = params;
+
+    const meshFloors = useMeshFloors(data, params.config, mode);
     const mapCenterMarkerRef = useRef(null);
     const labelRef = useRef<HTMLDivElement>(null);
     const [ currentHoveredObject, setCurrentHoveredObject ] = useState<Object3D | null>(null);
+    const meshObjectContext = useMeshObjectContext();
 
     const config = meshFloors.config;
     const floors = meshFloors.floors;
     const meshParams = meshFloors.meshParams;
+
 
     // if selectedActiveObjectId is not -1, then it is set to the DEFAULT_SELECTED_STORE
     let activeObjectId = config?.DEFAULT_SELECTED_STORE ?? '';
@@ -120,14 +134,13 @@ const SceneComponent = (params:ISceneComponentProps) => {
     }, [config, meshParams]);
 
     const resetHandle = () => {
-        console.debug({floors: meshFloors.floors});
         setSelectedFloorIndex(currKioskFloorIndex);
         setSelectedActiveObjectId('');
     }
 
     useEffect(() => {
         const currKioskLogo = meshFloors.storeLogos.flat().find(storeLogo => storeLogo.storeLogo.object_id === 'custom-layer-' + (currKioskObj as IExtMesh).object_id)?.storeLogo;
-        if (currKioskLogo) {
+        if (currKioskLogo && mode !== 'edit') {
             currKioskLogo.userData.htmlContent = <MapCenterMarker />
         }
         return () => {
@@ -137,15 +150,51 @@ const SceneComponent = (params:ISceneComponentProps) => {
         }
     }, [meshFloors, currKioskObj]);
 
+    useEffect(() => {
+        if (meshFloors.meshParams && meshFloors.meshParams.length && selectedActiveObjectId && meshObjectContext?.SetMeshObject) {
+            const object = meshFloors.meshParams[selectedFloorIndex === -1? 0 : selectedFloorIndex].find((value) => value.object_id === selectedActiveObjectId);
+            if (object) {
+                //@ts-ignore
+                handleMeshObjectContext(object);
+            }
+            //@ts-ignore
+        }
+    }, [meshFloors])
+
+    const handleMeshObjectContext = (object: IExtMesh) => {
+        if (meshObjectContext?.SetMeshObject) {
+            const textParams = meshFloors.textParams[selectedFloorIndex === -1? 0 : selectedFloorIndex]?.find(value => {
+                return value.textMesh.object_id === `${textLogoNamePrefix}${(object as IExtMesh).object_id}`
+            })
+
+            const logoParams = meshFloors.storeLogos[selectedFloorIndex === -1? 0 : selectedFloorIndex]?.find(value => {
+                return value.storeLogo.object_id === `${textLogoNamePrefix}${(object as IExtMesh).object_id}`
+            })
+
+            const result = [object as IExtMesh];
+
+            if (textParams) {
+                result.push(textParams.textMesh);
+            }
+
+            if (logoParams) {
+                result.push(logoParams.storeLogo)
+            }
+
+            meshObjectContext.SetMeshObject([...result]);
+        }
+    }
+
     const onClick = useCallback((e: ThreeEvent<MouseEvent>) => {
         e.stopPropagation();
         // console.log('onClick', e.object)
 
         const targetId = (e.object as IExtMesh).object_id;
+        handleMeshObjectContext(e.object as IExtMesh);
         setSelectedActiveObjectId(targetId ?? '');
         // console.log('set active object', targetId);
         setAmenityTargetType('');
-    }, []);
+    }, [selectedFloorIndex, meshFloors.meshParams.length]);
 
     const handleAmenityClick = useCallback((type: string) => {
         setAmenityTargetType(type)
@@ -187,8 +236,6 @@ const SceneComponent = (params:ISceneComponentProps) => {
 
     if (!config || !meshFloors.meshParams.length) {
         console.warn('LOADING MAP')
-        console.log('config', config)
-        console.log('meshFloors.meshParams.length', meshFloors.meshParams.length)
         return <div>Loading Map</div>
     }
 
@@ -217,55 +264,67 @@ const SceneComponent = (params:ISceneComponentProps) => {
 
     return (
         <>
-            <UIComponent accentColor={config.ACCENT_COLOR.getStyle()} floors={floors.length} selectedFloorIndex={currentFloorIndex} handleFloorChange={handleFloorChange} amenitiesList={amenitiesList} handleAmenityClick={handleAmenityClick} reset={resetHandle} zoomIn={() => setZoom({direction: 'in'})} zoomOut={() => setZoom({direction: 'out'})} />
-            <Canvas flat>
-                {params.stats? <Stats /> : null }
-                <SceneProperties background={config.MAP_BACKGROUND_COLOR} />
-                <CameraProperties near={1} far={10000} />
-                {/*<axesHelper args={[5000]} />*/}
-
-                <ambientLight intensity={1} color={'#c4c4c4'} />
-                <directionalLight position={[0, 400, 0]} color={'#ffffff'} intensity={0.3} />
-                <directionalLight position={[0, 0, 400]} color={'#c4c4c4'} intensity={0.2} />
-                <directionalLight position={[0, 0, -400]} color={'#c4c4c4'} intensity={0.2} />
-
-                <FloorsMap
-                    onCameraMove={onCameraMove}
-                    meshFloors={meshFloorsChecked}
-                    activeObjectId={activeObjectId}
-                    hoverObjectId={hoverObjectId}
-                    currKioskObj={currKioskObj}
-                    routeTargetId={activeObjectId}
-                    currentFloorIndex={currentFloorIndex}
-                    onPointerEnter={onPointerEnter}
-                    onPointerLeave={onPointerLeave}
-                    onPointerMove={onPointerMove}
-                    onClick={onClick}
-                    handleChangeFloor={handleFloorChange}
-                    amenityTargetType={amenityTargetType}
-                    escalatorNodes={meshFloors.escalator_nodes}
-                    zoom={zoom}
-                />
-            </Canvas>
-            <div ref={labelRef}
-                style={{
-                    position: 'absolute',
-                    padding: 10,
-                    background: '#ffffff',
-                    fontWeight: 600,
-                    color: '#000000',
-                    fontSize: 16,
-                    display: currentHoveredObject? 'block' : 'none',
-                    top: 300,
-                    left: 400,
-                    opacity: .8,
-                }}
-            >
-                <div>
-                    {currentHoveredObject && currentHoveredObject.userData.storeName}
+            {mode === 'edit' &&
+                <div className={styles['mapbox-admin-form']}>
+                    <MapboxForm
+                        data={data}
+                        setData={handleChangeMapitData}
+                        selectedId={selectedActiveObjectId}
+                        centerId={params.CENTER_ID as string}
+                    />
                 </div>
-            </div>
+            }
+            <div style={{ position: 'relative' }}>
+                <UIComponent accentColor={config.ACCENT_COLOR.getStyle()} floors={floors.length} selectedFloorIndex={currentFloorIndex} handleFloorChange={handleFloorChange} amenitiesList={amenitiesList} handleAmenityClick={handleAmenityClick} reset={resetHandle} zoomIn={() => setZoom({ direction: 'in' })} zoomOut={() => setZoom({ direction: 'out' })} />
+                <Canvas flat>
+                    {/* {params.stats? <Stats /> : null } */}
+                    <SceneProperties background={config.MAP_BACKGROUND_COLOR} />
+                    <CameraProperties near={1} far={10000} />
+                    {/*<axesHelper args={[5000]} />*/}
 
+                    <ambientLight intensity={1} color={'#c4c4c4'} />
+                    <directionalLight position={[0, 400, 0]} color={'#ffffff'} intensity={0.3} />
+                    <directionalLight position={[0, 0, 400]} color={'#c4c4c4'} intensity={0.2} />
+                    <directionalLight position={[0, 0, -400]} color={'#c4c4c4'} intensity={0.2} />
+                    <FloorsMap
+                        onCameraMove={onCameraMove}
+                        meshFloors={meshFloorsChecked}
+                        activeObjectId={activeObjectId}
+                        hoverObjectId={hoverObjectId}
+                        currKioskObj={currKioskObj}
+                        routeTargetId={activeObjectId}
+                        currentFloorIndex={currentFloorIndex}
+                        onPointerEnter={onPointerEnter}
+                        onPointerLeave={onPointerLeave}
+                        onPointerMove={onPointerMove}
+                        onClick={onClick}
+                        handleChangeFloor={handleFloorChange}
+                        amenityTargetType={amenityTargetType}
+                        escalatorNodes={meshFloors.escalator_nodes}
+                        zoom={zoom}
+                        mode={mode}
+                    />
+                </Canvas>
+                <div ref={labelRef}
+                    style={{
+                        position: 'absolute',
+                        padding: 10,
+                        background: '#ffffff',
+                        fontWeight: 600,
+                        color: '#000000',
+                        fontSize: 16,
+                        display: currentHoveredObject ? 'block' : 'none',
+                        top: 300,
+                        left: 400,
+                        opacity: .8,
+                    }}
+                >
+                    <div>
+                        {currentHoveredObject && currentHoveredObject.userData.storeName}
+                    </div>
+                </div>
+
+            </div>
         </>
     )
 };

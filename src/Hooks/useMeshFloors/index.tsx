@@ -7,23 +7,29 @@ import {
     Color,
 } from "three";
 import { useLoader } from "@react-three/fiber";
-import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader";
+// import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader";
+import { SVGLoader } from "three-stdlib";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import createGraph, { Graph } from "ngraph.graph";
 import data from "demo/data.json";
 import {loadFloors} from "./loadFloors";
-import type {IConfig, IExtMesh, IFloorData, IMeshParams, IMeshValues} from "../../types";
+import type {IConfig, IExtMesh, IFloorData, IMeshParams, IMeshValues, TMapMode} from "../../types";
 import {defaultVars, mapit2DefaultVars} from "../../defaults";
 import {allIndexedMapObjects, allIndexedRetailers} from "../../globals";
 import {drawTextLogoStoreOnMap, get_store_name_logo_geo} from "helpers/draw.logo.helpers";
-import { FontLoader } from "three/examples/jsm/loaders/FontLoader";
+// import { FontLoader } from "three/examples/jsm/loaders/FontLoader";
+import { FontLoader, Font } from "three-stdlib";
 import { IJsonConfig, IMeshParamsTmp} from "../../types";
 import {hex_to_color} from "../../helpers/misc";
 import {Kiosk, Floor, MapIt2Response, MapObj} from "../../mapitApiTypes";
 import { EventedType } from "ngraph.events";
+import fontData from './optimer_regular.typeface.json'
+import { FontData, useFont } from "@react-three/drei";
 
 // if (!isDefined(typeof MAPIT2)) window.MAPIT2 = { ...defaultVars };
 // window.MAPIT2 = { ...defaultVars, ...MAPIT2 };
+
+export const textLogoNamePrefix = 'custom-layer-';
 
 const config: IJsonConfig = { ...defaultVars, ...mapit2DefaultVars}
 
@@ -56,7 +62,7 @@ let activeMapObjectName = null;
 const floorsData:IFloorData[] = [];
 const floors = [] as Floor[];
 let floors_loaded = 0;
-const BASE_URL = '/';
+const BASE_URL = 'https://test.mycenterdeals.com/data/mapit2/';
 
 function select<T>(...values: T[]) {
     return values.find(value => value !== '' && value != null) || values.at(-1);
@@ -114,7 +120,8 @@ const init = (config: IJsonConfig, floors:IFloorData[], response: MapIt2Response
 
         floors.push({
             id: value.id,
-            svg_map: BASE_URL + 'data/mapit2/' + value.svg,
+            // svg_map: BASE_URL + 'data/mapit2/' + value.svg,
+            svg_map: BASE_URL + value.svg,
             title: value.title,
             objsGroup: objsGroup,
             interactiveObjs: [],
@@ -199,7 +206,7 @@ const init = (config: IJsonConfig, floors:IFloorData[], response: MapIt2Response
 }*/
 
 
-const useMeshFloors = (data: MapIt2Response|null, jsonConfig?:IJsonConfig): IMeshParamsTmp => {
+const useMeshFloors = (data: MapIt2Response|null, jsonConfig?:IJsonConfig, mode?: TMapMode): IMeshParamsTmp => {
     const [meshParams, setMeshParams] = useState<IMeshValues[][]>([]);
     const [textParams, setTextParams] = useState<Array<{textMesh:IExtMesh}[]>>([]);
     const [storeLogos, setStoreLogos] = useState<{storeLogo: Mesh}[][]>([]);
@@ -210,7 +217,8 @@ const useMeshFloors = (data: MapIt2Response|null, jsonConfig?:IJsonConfig): IMes
     let result = useLoader(SVGLoader, urls);
 
     const consolePrefix = 'MAPIT2';
-    const myFont = useLoader(FontLoader, 'assets/threejs/threejs/examples/fonts/optimer_regular.typeface.json')
+    // const myFont = useLoader(FontLoader, 'assets/threejs/threejs/examples/fonts/optimer_regular.typeface.json')
+    const myFont = useFont(fontData as unknown as FontData);
 
     // const getWallShape = (...params: any): Shape | Shape[] => {
     //     return []
@@ -234,25 +242,61 @@ const useMeshFloors = (data: MapIt2Response|null, jsonConfig?:IJsonConfig): IMes
     useEffect(() => {
         if (!data) return;
 
+
         // console.log('useMeshFloors[data]', {data})
 
         const processedConfig = init(jsonConfig ?? config, floorsData, data as MapIt2Response);
         const values: string[] = [];
         processedConfig.FLOORS.forEach((value) => {
-            values.push(`/data/mapit2/${value.svg}`);
+            values.push(`${BASE_URL}${value.svg}`);
         });
 
         setProcessedConfig(processedConfig);
         setUrls([...values]);
+    // }, [JSON.stringify(data)]);
+    return () => {
+        if (meshParams) {
+            meshParams.forEach(floor => {
+                if (floor) {
+                    floor.forEach(value => {
+                        value.mesh.removeFromParent();
+                    })
+                }
+            })
+        }
+
+        if (textParams) {
+            textParams.forEach(floor => {
+                if (floor) {
+                    floor.forEach(value => {
+                        value.textMesh.removeFromParent();
+                    })
+                }
+            })
+        }
+
+        if (storeLogos) {
+            storeLogos.forEach(floor => {
+                if (floor) {
+                    floor.forEach(value => {
+                        value.storeLogo.removeFromParent();
+                    })
+                }
+            })
+        }
+
+        setMeshParams([]);
+        setTextParams([]);
+        setStoreLogos([]);
+    }
     }, [data]);
 
     useEffect(() => {
         if (!processedConfig || !urls.length || !myFont || !result) return;
 
-        const { GeometriesAndMaterials, graph, escalator_nodes } = loadFloors(floorsData, processedConfig, result);
+        const { GeometriesAndMaterials, graph, escalator_nodes } = loadFloors(floorsData, processedConfig, result, mode);
         const TextsAndLogos:Array<{textMesh:IExtMesh}[]> = [];
         allNonIndexedMapObjects.forEach((params) => {
-            const textLogoNamePrefix = 'custom-layer-';
             let values: IMeshValues | undefined;
             for (let i = 0; i < GeometriesAndMaterials.length; i++) {
                 //@ts-ignore

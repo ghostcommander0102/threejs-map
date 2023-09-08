@@ -1,0 +1,161 @@
+.kioskMarker {
+  width: 15px;
+  height: 30px;
+}
+.kioskMarker svg {
+  transform: translate(-50%, -50%);
+}
+
+.mapCenterMarker:before,
+.mapCenterMarker:after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  left: 0;
+  top: 0;
+  margin-left: -5px;
+  margin-top: -5px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(76, 165, 255, 1);
+  transform: scale(1);
+}
+
+.mapCenterMarker:before {
+  animation: pulse-animation 2s infinite;
+  background-color: rgba(76, 165, 255, 1);
+}
+
+.mapCenterMarker:after {
+  animation: pulse-animation 2s infinite 0.4s;
+}
+
+@keyframes pulse-animation {
+  0% {
+    transform: scale(0.8);
+    box-shadow: 0 0 0 0 rgba(76, 165, 255, 0.7);
+  }
+  70% {
+    transform: scale(1.2);
+    box-shadow: 0 0 0 30px rgba(76, 165, 255, 0);
+  }
+  100% {
+    transform: scale(0.8);
+    box-shadow: 0 0 0 0 rgba(76, 165, 255, 0);
+  }
+}
+
+.mapbox-component {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  grid-template-rows: 1fr;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.mapbox-admin-form {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 15px;
+  border: 1px solid #ccc;
+}
+
+.mapbox-info {
+  color: #31708f;
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+
+  padding: 15px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+
+  font-size: 14px;
+  line-height: 1.42;
+}
+
+.hide {
+  display: none !important;
+}
+
+/* ////////////////////////////////////o */
+
+#threejs-map-wrapper {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+	flex: 1;
+	user-select: none;
+}
+
+#threejs-map {
+	width: 100%;
+	height: 100%;
+	position: relative;
+	overflow: hidden;
+}
+
+#map_controls {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	z-index: 1;
+}
+
+#map_controls .btn_group {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: flex-end;
+}
+
+#map_controls .btn_group.floors {
+	align-items: normal;
+}
+
+#map_controls .btn_group + .btn_group {
+	margin-top: 15px;
+}
+
+#map_controls .control_btn {
+	color: #666;
+	background-color: whitesmoke;
+	font-size: 15px;
+	font-weight: bold;
+	padding: 6px 15px;
+	border: 1px solid #ccc;
+	cursor: pointer;
+}
+
+#map_controls .control_btn + .control_btn {
+	margin-top: -1px;
+}
+
+#map_controls .control_btn.active {
+	background-color: #1075b7;
+	border-color: #1075b7;
+	color: #fff;
+	cursor: default;
+}
+
+#map_controls .zoom_btns {
+	flex-direction: row;
+}
+#map_controls .zoom_btns .control_btn {
+	font-size: 17px;
+	padding: 0;
+	width: 36px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+#map_controls .control_btn.clear_route {
+	display: none !important;
+}

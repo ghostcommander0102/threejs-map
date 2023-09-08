@@ -27,16 +27,17 @@ export function useMapit2Data({ CENTER_ID, mapitData }: useMapIt2DataProps) {
         if (!CENTER_ID) {
             return;
         }
-        const url = '/data/mapit2/' + CENTER_ID + '.json';
+        // const url = '/data/mapit2/' + CENTER_ID + '.json';
+        const url = `https://test.mycenterdeals.com/api/mapit2/data?center=${CENTER_ID}&time=1693919608355`;
         console.log('URL', url);
 
         fetch(url)
             .then(response => response.json())
             .then((response: MapIt2Response) => {
-                setData(response);
+                setData({...response});
             });
 
-    }, [CENTER_ID]);
+    }, [CENTER_ID, mapitData]);
 
     return data;
 }

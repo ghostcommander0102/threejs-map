@@ -1,4 +1,4 @@
-import {IMeshParams} from "../../types";
+import {IMeshParams, TMapMode} from "../../types";
 import {ThreeEvent} from "@react-three/fiber";
 import React, {MouseEventHandler} from "react";
 import {Mesh, MeshLambertMaterial, MeshStandardMaterial, RGB} from "three";
@@ -17,7 +17,8 @@ interface IMapProps {
     onPointerLeave?: (e: ThreeEvent<PointerEvent>) => void;
     onPointerMove?: (e: ThreeEvent<PointerEvent>) => void;
     onClick?: (e: ThreeEvent<MouseEvent>) => void;
-    handleChangeFloor: (index: number) => MouseEventHandler<HTMLDivElement>
+    handleChangeFloor: (index: number) => MouseEventHandler<HTMLDivElement>;
+    mode?: TMapMode;
 }
 
 const getDarkerColor = (color: RGB) => {
@@ -32,7 +33,7 @@ const getDarkerColor = (color: RGB) => {
 }
 
 export const Map = (params: IMapProps) => {
-    const {meshFloors, routeTube, floorIndex, activeObjectId, hoverObjectId, visible, handleChangeFloor} = params;
+    const {meshFloors, routeTube, floorIndex, activeObjectId, hoverObjectId, visible, handleChangeFloor, mode} = params;
 
     const { config, meshParams, textParams, storeLogos} = meshFloors;
     const floor = meshFloors.floors[floorIndex];
@@ -53,7 +54,7 @@ export const Map = (params: IMapProps) => {
             {floorMeshParams?.map((params) => {
                 if (!params.mesh) return null;
 
-                const interactive = visible && params.mesh.visible && floor.interactiveObjs && floor.interactiveObjs.includes(params.mesh);
+                const interactive = (visible && params.mesh.visible && floor.interactiveObjs && floor.interactiveObjs.includes(params.mesh));
                 const hovered = hoverObjectId && params.mesh.object_id === hoverObjectId;
                 const active = activeObjectId && params.mesh.object_id === activeObjectId;
                 if (interactive) {

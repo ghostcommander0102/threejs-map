@@ -1,6 +1,7 @@
 import {getMeshParams} from "./getMeshParams";
-import {SVGResult} from "three/examples/jsm/loaders/SVGLoader";
-import {IConfig, IFloorData, IMeshValues} from "../../types";
+// import {SVGResult} from "three/examples/jsm/loaders/SVGLoader";
+import { SVGResult } from "three-stdlib";
+import {IConfig, IFloorData, IMeshValues, TMapMode} from "../../types";
 import {allIndexedMapObjects, allIndexedRetailers, allNodesFloor, pathFinderGraph} from "../../globals";
 import {getMaterialAndGeometry} from "./getMaterialAndGeometry";
 import {Raycaster} from "three";
@@ -9,7 +10,7 @@ import {assign_route_nodes_to_stores, linkFloorEscalators} from "helpers/route.h
 // TODO: get rid of this global variable
 let node_count = 0;
 
-export function loadFloors(floors:IFloorData[], config:IConfig, results:SVGResult[]) {
+export function loadFloors(floors:IFloorData[], config:IConfig, results:SVGResult[], mode?: TMapMode) {
     const GeometriesAndMaterials: Array<IMeshValues[]> = [];
     // let floor = floors[floors_loaded];
     // let floor_index = floors_loaded;
@@ -61,7 +62,8 @@ export function loadFloors(floors:IFloorData[], config:IConfig, results:SVGResul
                         floor_index,
                         allIndexedMapObjects,
                         allIndexedRetailers,
-                        path
+                        path,
+                        mode
                     );
                     if (!GeometriesAndMaterials[floor_index]) {
                         GeometriesAndMaterials[floor_index] = [];
