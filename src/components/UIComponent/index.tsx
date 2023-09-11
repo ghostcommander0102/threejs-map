@@ -44,7 +44,7 @@ const UIComponent = ({
                     </div>
                 </div>
                 <div id={styles['mapit2_loader']} className={styles['hide']}>Loading map, please wait...</div>
-                <div className={`${styles.amenities} ${styles['ng-scope']}`} style={{ display: 'block' }}>
+                <div className={`${styles.amenities} ${styles['ng-scope']}`} style={{ display: 'none' }}>
                     {amenitiesList.map((amenity, index) => (
                         <div key={`amenity-${amenity.name}-${index}`} className={`${styles.amenity} ${styles['ng-scope']}`} style={{ backgroundColor: '#000000' }} onClick={() => handleAmenityClick(amenity.type)}>
                             <div className={styles.img}>
