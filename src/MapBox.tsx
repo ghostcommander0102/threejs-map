@@ -14,8 +14,6 @@ export interface IAppProps {
     mode: TMapMode;
 }
 
-console.debug({styles});
-
 function MapBox({ CENTER_ID, mapitData, config, stats, mode }: IAppProps) {
 
   const [selectedActiveObjectId, setSelectedActiveObjectId] = useState<string>('');
@@ -40,7 +38,7 @@ function MapBox({ CENTER_ID, mapitData, config, stats, mode }: IAppProps) {
 
   return (
     <MeshObjectContextProvider>
-      <div className={styles['mapbox-component']}>
+      <div className={`${styles['mapbox-component']} ${mode !== 'edit'? styles.view : ''}`}>
           <SceneComponent setSelectedActiveObjectId={setSelectedActiveObjectId} selectedActiveObjectId={selectedActiveObjectId} stats={stats} mapitData={mapData as MapIt2Response} CENTER_ID={CENTER_ID} config={config} mode={mode} handleChangeMapitData={handleChangeMapitData}  />
         <div className={styles.hide}>
           <div id="map-special-svg-kiosk">

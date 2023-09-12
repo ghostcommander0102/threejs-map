@@ -351,8 +351,6 @@ const MapboxForm = (params: IMapboxForm) => {
                         activeKey={retailerTabsKey}
                         onSelect={handleChangeTab}
                     >
-                        <Tab eventKey="retail_name" title="Retail Name">retail name</Tab>
-                        <Tab eventKey="retail_logo" title="Retail Logo">retail logo</Tab>
                         <Tab eventKey="retail_text" title="Custom Text">
                             <Form.Group className="m-3">
                                 <Row className="align-items-center mb-3">

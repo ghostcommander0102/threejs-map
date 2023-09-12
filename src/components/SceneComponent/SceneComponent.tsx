@@ -16,7 +16,6 @@ import { useMeshObjectContext } from "contexts/MeshObjectContextProvider";
 import MapboxForm from "components/MapboxForm/MapboxForm";
 import styles from '../../MapBox.module.css';
 
-
 const amenitiesList: IAmenitiesInteractiveList[] = [
     {
         name: 'ATM',
@@ -275,7 +274,7 @@ const SceneComponent = (params:ISceneComponentProps) => {
                 </div>
             }
             <div style={{ position: 'relative' }}>
-                <UIComponent accentColor={config.ACCENT_COLOR.getStyle()} floors={floors.length} selectedFloorIndex={currentFloorIndex} handleFloorChange={handleFloorChange} amenitiesList={amenitiesList} handleAmenityClick={handleAmenityClick} reset={resetHandle} zoomIn={() => setZoom({ direction: 'in' })} zoomOut={() => setZoom({ direction: 'out' })} />
+                <UIComponent accentColor={config.ACCENT_COLOR.getStyle()} floors={floors.length} selectedFloorIndex={currentFloorIndex} handleFloorChange={handleFloorChange} amenitiesList={amenitiesList} handleAmenityClick={handleAmenityClick} reset={resetHandle} zoomIn={() => setZoom({ direction: 'in' })} zoomOut={() => setZoom({ direction: 'out' })} mode={mode} />
                 <Canvas flat>
                     {/* {params.stats? <Stats /> : null } */}
                     <SceneProperties background={config.MAP_BACKGROUND_COLOR} />
