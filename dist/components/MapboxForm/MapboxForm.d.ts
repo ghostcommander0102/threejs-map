@@ -1,6 +1,11 @@
+import { MapObj } from "mapitApiTypes";
+import { IConfig, IMeshParamsTmp } from "types";
 interface IMapboxForm {
+    floorIndex: number;
+    meshFloors: IMeshParamsTmp;
+    config: IConfig;
     data: any;
-    setData: (data: unknown) => void;
+    setData: (index: number, data: MapObj) => void;
     selectedId: string;
     centerId: string;
 }

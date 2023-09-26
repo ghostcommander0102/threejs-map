@@ -7,8 +7,7 @@ import {
     Color,
 } from "three";
 import { useLoader } from "@react-three/fiber";
-// import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader";
-import { SVGLoader } from "three-stdlib";
+import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import createGraph, { Graph } from "ngraph.graph";
 import data from "demo/data.json";
@@ -17,7 +16,6 @@ import type {IConfig, IExtMesh, IFloorData, IMeshParams, IMeshValues, TMapMode} 
 import {defaultVars, mapit2DefaultVars} from "../../defaults";
 import {allIndexedMapObjects, allIndexedRetailers} from "../../globals";
 import {drawTextLogoStoreOnMap, get_store_name_logo_geo} from "helpers/draw.logo.helpers";
-// import { FontLoader } from "three/examples/jsm/loaders/FontLoader";
 import { FontLoader, Font } from "three-stdlib";
 import { IJsonConfig, IMeshParamsTmp} from "../../types";
 import {hex_to_color} from "../../helpers/misc";
@@ -206,7 +204,7 @@ const init = (config: IJsonConfig, floors:IFloorData[], response: MapIt2Response
 }*/
 
 
-const useMeshFloors = (data: MapIt2Response|null, jsonConfig?:IJsonConfig, mode?: TMapMode): IMeshParamsTmp => {
+const useMeshFloors = (data: MapIt2Response|null, jsonConfig?: Partial<IJsonConfig>, mode?: TMapMode): IMeshParamsTmp => {
     const [meshParams, setMeshParams] = useState<IMeshValues[][]>([]);
     const [textParams, setTextParams] = useState<Array<{textMesh:IExtMesh}[]>>([]);
     const [storeLogos, setStoreLogos] = useState<{storeLogo: Mesh}[][]>([]);
@@ -245,7 +243,7 @@ const useMeshFloors = (data: MapIt2Response|null, jsonConfig?:IJsonConfig, mode?
 
         // console.log('useMeshFloors[data]', {data})
 
-        const processedConfig = init(jsonConfig ?? config, floorsData, data as MapIt2Response);
+        const processedConfig = init(jsonConfig ? {...config, ...jsonConfig} : config, floorsData, data as MapIt2Response);
         const values: string[] = [];
         processedConfig.FLOORS.forEach((value) => {
             values.push(`${BASE_URL}${value.svg}`);

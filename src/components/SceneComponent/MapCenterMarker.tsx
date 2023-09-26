@@ -1,4 +1,5 @@
 import React, {useEffect} from "react";
+import styles from '../../MapBox.module.css';
 
 export const MapCenterMarker = () => {
     const kioskElementRef = React.useRef<HTMLDivElement>(null);
@@ -22,7 +23,7 @@ export const MapCenterMarker = () => {
     }, []);
 
     return <>
-        <div className="mapCenterMarker"></div>
-        <div className="kioskMarker" ref={kioskElementRef}></div>
+        <div className={styles['mapCenterMarker']}></div>
+        <div className={styles['kioskMarker']} ref={kioskElementRef}></div>
     </>
 }

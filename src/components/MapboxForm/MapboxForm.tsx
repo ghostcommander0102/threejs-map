@@ -1,19 +1,24 @@
 import { HtmlProps } from "@react-three/drei/web/Html";
 import { useThree } from "@react-three/fiber";
+import { MeshType, getMaterial } from "Hooks/useMeshFloors/getMaterialAndGeometry";
 import { useMeshObjectContext } from "contexts/MeshObjectContextProvider";
 import { hex_to_color } from "helpers/misc";
 import { MapObj } from "mapitApiTypes";
 import { MouseEventHandler, SyntheticEvent, useEffect, useRef, useState, useTransition } from "react";
-import { Button, Col, Form, FormControl, FormControlProps, Row, Tab, Tabs } from "react-bootstrap"
+import { Button, Col, Form, FormControl, FormControlProps, Nav, Row, Tab, Tabs } from "react-bootstrap"
 import { DoubleSide, Euler, MeshBasicMaterial, MeshPhongMaterial, Object3D, Vector3 } from "three";
 // import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry";
 import { TextGeometry } from "three-stdlib";
+import { IConfig, IJsonConfig, IMeshParamsTmp } from "types";
 
 
 
 interface IMapboxForm {
+    floorIndex: number;
+    meshFloors: IMeshParamsTmp;
+    config: IConfig;
     data: any;
-    setData: (data: unknown) => void;
+    setData: (index: number, data: MapObj) => void;
     selectedId: string;
     centerId: string;
 }
@@ -53,7 +58,7 @@ const getDefaultMapOjbValues = (centerId: string): MapObj => ({
 
 const MapboxForm = (params: IMapboxForm) => {
 
-    const {data, setData, selectedId, centerId} = params;
+    const {data, setData, selectedId, centerId, config, floorIndex, meshFloors} = params;
 
     const [mainTabKey, setMainTabKey] = useState<TMainTabsKey>('');
     const [retailerTabsKey, setRetailerTabsKey] = useState<TRetailerTabsKey>('');
@@ -118,7 +123,7 @@ const MapboxForm = (params: IMapboxForm) => {
         const index = data.map_objs.findIndex((value: MapObj) => value.id === formData.id);
         if (index !== -1) {
             data.map_objs[index] = {...formData};
-            setData({...data});
+            setData(index, {...data});
         }
     }
 
@@ -139,7 +144,7 @@ const MapboxForm = (params: IMapboxForm) => {
         const index = data.map_objs.findIndex((value: MapObj) => value.id === formData.id);
         if (index !== -1) {
             data.map_objs[index] = { ...formData };
-            setData({ ...data });
+            setData(index, { ...data });
             // if (timeoutRef.current) {
             //     clearTimeout(timeoutRef.current);
             // }
@@ -175,17 +180,13 @@ const MapboxForm = (params: IMapboxForm) => {
         }
     }
 
-    const handleChange = (e: any) => {
-        const target = e.target as HTMLInputElement;
-        const value = target.value;
-        const name = target.name;
+    const changeValue = (name: string, value: string) => {
         if (name === 'custom_image' && context?.MeshObject && context.MeshObject.length <= 1) {
             formData.custom_image = value;
             setFormData({...formData});
             updateData({...formData});
         }
         context?.MeshObject?.forEach((obj, index) => {
-            if (index === 0) return;
             if (!obj.userData.position) {
                 obj.userData.position = new Vector3();
                 obj.userData.position.copy(obj.position);
@@ -194,6 +195,7 @@ const MapboxForm = (params: IMapboxForm) => {
             position.copy(obj.userData.position);
             switch (name) {
                 case 'custom_text':
+                    if (index === 0) break;
                     formData.custom_text = value;
                     if (['retail_text', 'custom_text'].includes(formData.layer_type)) {
                         let text_geometry = new TextGeometry(formData.custom_text, {
@@ -208,12 +210,14 @@ const MapboxForm = (params: IMapboxForm) => {
                     }
                     break;
                 case 'custom_image':
+                    if (index === 0) break;
                     formData.custom_image = value;
                     updateData({
                         ...formData,
                     })
                     break;
                 case 'size':
+                    if (index === 0) break;
                     formData.size = value;
                     if (!(['retail_logo', 'kiosk', 'amenity', 'custom_image'].includes(formData.layer_type))) {
                         let text = '';
@@ -247,6 +251,7 @@ const MapboxForm = (params: IMapboxForm) => {
                     break;
 
                 case 'rotate':
+                    if (index === 0) break;
                     formData.rotate = value;
                     obj.rotation.set(
                         obj.rotation.x,
@@ -256,18 +261,21 @@ const MapboxForm = (params: IMapboxForm) => {
                     break;
 
                 case 'offsetX':
+                    if (index === 0) break;
                     position.x += parseFloat(value);
                     obj.position.setX(position.x);
                     formData.offsetX = value;
                     break;
 
                 case 'offsetY':
+                    if (index === 0) break;
                     position.y += parseFloat(value);
                     obj.position.setY(position.y);
                     formData.offsetY = value;
                     break;
 
                 case 'text_color':
+                    if (index === 0) break;
                     formData.text_color = value;
                     if (['retail_name', 'retail_text', 'custom_text'].includes(formData.layer_type)) {
                         const material_settings = {
@@ -295,15 +303,37 @@ const MapboxForm = (params: IMapboxForm) => {
                     break;
 
                 case 'bg_color':
+                    if (index !== 0) break;
                     formData.bg_color = value;
-                    updateData({...formData});
+                    let meshType: MeshType = 'store';
+                    if (obj.object_id?.startsWith('big-store')) {
+                        meshType = 'big-store';
+                    }
+                    obj.material = getMaterial(
+                        config,
+                        meshType,
+                        formData.map_obj_name,
+                        formData.bg_color,
+                        formData.transparent === "1"? true : false,
+                        {[formData.map_obj_name]: {...formData}}
+                        );
+                    // updateData({...formData});
                     break;
             
                 default:
                     break;
             }
-            startTransition(() => setFormData({ ...formData }));
+            startTransition(() => {
+                setFormData({ ...formData })
+                setData(0, { ...data });
+            });
         })
+    }
+    const handleChange = (e: any) => {
+        const target = e.target as HTMLInputElement;
+        const value = target.value;
+        const name = target.name;
+        changeValue(name, value);
     }
 
     useEffect(() => {
@@ -327,20 +357,56 @@ const MapboxForm = (params: IMapboxForm) => {
         }
     }, [formData])
 
+    const handleDecrement = (key: 'size' | 'rotate' | 'offsetX' | 'offsetY') => () => {
+        if (Object.hasOwn(formData, key)) {
+            let value = parseInt(formData[key]);
+            value -= 1;
+            changeValue(key, value.toString());
+        }
+    }
+
+    const handleIncrement = (key: 'size' | 'rotate' | 'offsetX' | 'offsetY') => () => {
+        if (Object.hasOwn(formData, key)) {
+            let value = parseInt(formData[key]);
+            value += 1;
+            changeValue(key, value.toString());
+        }
+    }
+
 
     return (
         <>
-            {/* 
-            //@ts-ignore */}
-            <Button variant="danger" className="mb-3" onClick={handleReset}>Reset</Button>
-            <Tabs
-                id="main-tab-form"
-                activeKey={mainTabKey}
-                onSelect={handleChangeTab}
-                className="mb-3"
-                justify
-            >
-                <Tab eventKey="retailer" title="Retailer">
+            <Tab.Container activeKey={mainTabKey}>
+                <Col>
+                    <Row>
+                        <Col sm="9">
+                            <Nav
+                                variant="tabs"
+                                className="flex-row"
+                                // activeKey={mainTabKey}
+                                onSelect={handleChangeTab}
+                            >
+                                <Nav.Item>
+                                    <Nav.Link eventKey={"retailer"}>Retailer</Nav.Link>
+                                </Nav.Item>
+                                <Nav.Item>
+                                    <Nav.Link eventKey={"special"}>Special</Nav.Link>
+                                </Nav.Item>
+                                <Nav.Item>
+                                    <Nav.Link eventKey={"custom"}>Custom</Nav.Link>
+                                </Nav.Item>
+                            </Nav>
+                        </Col>
+                        <Col sm="3">
+                            {/* 
+                //@ts-ignore */}
+                            <Button variant="danger" className="mb-3" onClick={handleReset}>Reset</Button>
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col sm="12">
+                            <Tab.Content>
+                                <Tab.Pane eventKey={"retailer"}>
                     <Form.Select className="mb-3" aria-label="Choose a Retailer" value={formData.retailer_id?? ''} onChange={handleChangeRetailer}>
                         <option value={''} disabled hidden>Choose a Retalier...</option>
                         {data.retailers?.map((value: any) => <option key={`retailer-${value.id}`} value={value.id}>{value.retail_name} - {value.location}</option>)}
@@ -351,6 +417,8 @@ const MapboxForm = (params: IMapboxForm) => {
                         activeKey={retailerTabsKey}
                         onSelect={handleChangeTab}
                     >
+                        <Tab eventKey="retail_name" title="Retail Name"></Tab>
+                        <Tab eventKey="retail_logo" title="Retail Logo"></Tab>
                         <Tab eventKey="retail_text" title="Custom Text">
                             <Form.Group className="m-3">
                                 <Row className="align-items-center mb-3">
@@ -371,8 +439,8 @@ const MapboxForm = (params: IMapboxForm) => {
                         </Tab>
 
                     </Tabs>
-                </Tab>
-                <Tab eventKey="special" title="Special">
+                                </Tab.Pane>
+                                <Tab.Pane eventKey={"special"}>
                     <Tabs
                         variant="pills"
                         id="special-tab-form"
@@ -394,8 +462,8 @@ const MapboxForm = (params: IMapboxForm) => {
                             </Form.Select>
                         </Tab>
                     </Tabs>
-                </Tab>
-                <Tab eventKey="custom" title="Custom">
+                                </Tab.Pane>
+                                <Tab.Pane eventKey={"custom"}>
                     <Tabs
                         variant="pills"
                         id="custom-tab-form"
@@ -438,66 +506,111 @@ const MapboxForm = (params: IMapboxForm) => {
                             </Form.Group>
                         </Tab>
                     </Tabs>
-                </Tab>
-            </Tabs>
-            <Form.Group className="mb-3">
+                                </Tab.Pane>
+                            </Tab.Content>
+                        </Col>
+                    </Row>
+                </Col>
+            </Tab.Container>
+            <Form.Group className="mb-3 mt-3">
                 <Row className="align-items-center mb-3">
-                    <Col sm="2">
+                    <Col sm="4" className="d-flex justify-content-start">
                         <Form.Label className="mb-0">Size</Form.Label>
                     </Col>
-                    <Col sm="10">
-                        <Form.Control
-                            name="size"
-                            type="number"
-                            value={formData.size}
-                            onChange={handleChange}
-                        />
+                    <Col sm="8">
+                        <Row>
+                            <Col sm="2" className="d-flex">
+                                <Button onClick={handleDecrement('size')} variant="outline-dark">-</Button>
+                            </Col>
+                            <Col sm="4">
+                                <Form.Control
+                                    name="size"
+                                    type="number"
+                                    value={formData.size}
+                                    onChange={handleChange}
+                                />
+                            </Col>
+                            <Col sm="2" className="d-flex justify-content-end">
+                                <Button onClick={handleIncrement('size')} variant="outline-dark">+</Button>
+                            </Col>
+                        </Row>
                     </Col>
                 </Row>
                 <Row className="align-items-center mb-3">
-                    <Col sm="2">
+                    <Col sm="4" className="d-flex justify-content-start">
                         <Form.Label className="mb-0">Rotate</Form.Label>
                     </Col>
-                    <Col sm="10">
-                        <Form.Control
-                            name="rotate"
-                            type="number"
-                            value={rotation?? formData.rotate}
-                            onChange={handleChange}
-                        />
+                    <Col sm="8">
+                        <Row>
+                            <Col sm="2" className="d-flex">
+                                <Button onClick={handleDecrement('rotate')} variant="outline-dark">-</Button>
+                            </Col>
+                            <Col sm="4">
+                                <Form.Control
+                                    name="rotate"
+                                    type="number"
+                                    value={rotation ?? formData.rotate}
+                                    onChange={handleChange}
+                                />
+                            </Col>
+                            <Col sm="2" className="d-flex justify-content-end">
+                                <Button onClick={handleIncrement('rotate')} variant="outline-dark">+</Button>
+                            </Col>
+                        </Row>
                     </Col>
                 </Row>
                 <Row className="align-items-center mb-3">
-                    <Col sm="2">
+                    <Col sm="4" className="d-flex justify-content-start">
                         <Form.Label className="mb-0">Offset X</Form.Label>
                     </Col>
-                    <Col sm="10">
-                        <Form.Control
-                            name="offsetX"
-                            type="number"
-                            value={formData.offsetX}
-                            onChange={handleChange}
-                        />
+                    <Col sm="8">
+                        <Row>
+                            <Col sm="2" className="d-flex">
+                                <Button onClick={handleDecrement('offsetX')} variant="outline-dark">-</Button>
+                            </Col>
+                            <Col sm="4">
+
+                                <Form.Control
+                                    name="offsetX"
+                                    type="number"
+                                    value={formData.offsetX}
+                                    onChange={handleChange}
+                                />
+                            </Col>
+                            <Col sm="2" className="d-flex justify-content-end">
+                                <Button onClick={handleIncrement('offsetX')} variant="outline-dark">+</Button>
+                            </Col>
+                        </Row>
                     </Col>
                 </Row>
                 <Row className="align-items-center mb-3">
-                    <Col sm="2">
+                    <Col sm="4" className="d-flex justify-content-start">
                         <Form.Label className="mb-0">Offset Y</Form.Label>
                     </Col>
-                    <Col sm="10">
-                        <Form.Control
-                            name="offsetY"
-                            type="number"
-                            value={formData.offsetY}
-                            onChange={handleChange}
-                        />
+                    <Col sm="8">
+                        <Row>
+                            <Col sm="2" className="d-flex">
+                                <Button onClick={handleDecrement('offsetY')} variant="outline-dark">-</Button>
+                            </Col>
+                            <Col sm="4">
+                                <Form.Control
+                                    name="offsetY"
+                                    type="number"
+                                    value={formData.offsetY}
+                                    onChange={handleChange}
+                                />
+                            </Col>
+                            <Col sm="2" className="d-flex justify-content-end">
+                                <Button onClick={handleIncrement('offsetY')} variant="outline-dark">+</Button>
+                            </Col>
+                        </Row>
                     </Col>
                 </Row>
                 <Row className="align-items-center mb-3">
-                    <Col sm="3">
+                    <Col sm="3" className="d-flex justify-content-start">
                         <Form.Label className="mb-0">BG Color</Form.Label>
                     </Col>
-                    <Col sm="6">
+                    <Col sm="3" className="p-0">
                         <Form.Control
                             name="bg_color"
                             type="string"
@@ -505,7 +618,7 @@ const MapboxForm = (params: IMapboxForm) => {
                             onChange={handleChange}
                         />
                     </Col>
-                    <Col sm="3">
+                    <Col sm="2">
                         <Form.Control
                             type="color"
                             name="bg_color"
@@ -513,13 +626,35 @@ const MapboxForm = (params: IMapboxForm) => {
                             onChange={handleChange}
                         />
                     </Col>
+                    <Col sm="4">
+                        <Row>
+                            <Col sm="3">
+                                <input
+                                        name="transparent"
+                                        id="transparent"
+                                        type="checkbox"
+                                        value={formData.transparent}
+                                        onChange={handleChange}
+                                ></input>
+                                    {/* <Form.Control
+                                        name="transparent"
+                                        type="checkbox"
+                                        value={formData.transparent}
+                                        onChange={handleChange}
+                                    ></Form.Control> */}
+                            </Col>
+                            <Col sm="9" className="p-0">
+                                <Form.Label for="transparent" className="mb-0">Transparent</Form.Label>
+                            </Col>
+                        </Row>
+                    </Col>
                 </Row>
                 {['retail_name', 'custom_text', 'retail_text'].includes(formData.layer_type) && 
                     <Row className="align-items-center mb-3">
-                        <Col sm="3">
+                        <Col sm="4" className="d-flex justify-content-start">
                             <Form.Label className="mb-0">Text Color</Form.Label>
                         </Col>
-                        <Col sm="6">
+                        <Col sm="5">
                             <Form.Control
                                 type="string"
                                 name="text_color"

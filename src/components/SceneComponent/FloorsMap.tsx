@@ -123,7 +123,7 @@ export const FloorsMap = (params:IFloorsMapProps) => {
 
         const cameraSpeed = 0.1; // per second
         const targetSpeed = 0.1;
-        const focus = get_camera_focus_object(meshes, camera.fov, camera.aspect, style);
+        const focus = get_camera_focus_object(meshes, camera.fov, camera.aspect, mode === 'edit'? '2D' : style);
         const distance = mapControlRef.current.object.position.distanceTo(focus.position);
         const targetDistance = mapControlRef.current.target.distanceTo(focus.target);
         cameraFocus.current = {

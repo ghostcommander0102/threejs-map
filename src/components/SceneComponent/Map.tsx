@@ -4,6 +4,7 @@ import React, {MouseEventHandler} from "react";
 import {Mesh, MeshLambertMaterial, MeshStandardMaterial, RGB} from "three";
 import {RouteTube} from "./RouteTube";
 import {Html} from "@react-three/drei";
+import styles from '../../MapBox.module.css';
 
 interface IMapProps {
     floorIndex: number,
@@ -90,9 +91,9 @@ export const Map = (params: IMapProps) => {
                 //@ts-ignore
                 return <primitive key={`escalator-${params.object_id}`} object={params}>
                     <Html visible={false} position={params.geometry.boundingSphere?.center}>
-                        <div onClick={handleChangeFloor(params.goToFloor?.index || 0)} id="escalator_elems" style={{ display: visible ? 'block' : 'none' }}>
-                            <div className="element" id={params.object_id as string}>
-                                <div className="label">{params.goToFloor?.direction}: Floor {params.goToFloor ? params.goToFloor.index + 1 : ''}</div>
+                        <div onClick={handleChangeFloor(params.goToFloor?.index || 0)} id={styles.escalator_elems} style={{ display: visible ? 'block' : 'none' }}>
+                            <div className={styles.element} id={params.object_id as string}>
+                                <div className={styles.label}>{params.goToFloor?.direction}: Floor {params.goToFloor ? params.goToFloor.index + 1 : ''}</div>
                             </div>
                         </div>
                     </Html>

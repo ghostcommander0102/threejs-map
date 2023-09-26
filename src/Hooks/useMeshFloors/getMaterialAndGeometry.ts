@@ -39,9 +39,14 @@ export function getRenderOrder(mesh_type: MeshType): number {
     return 0;
 }
 
-export const getMaterialAndGeometry = (config: IConfig, mesh_type: MeshType, layer_name: string, layer_color: Color | string, mesh_transparent: boolean, mesh_visible: boolean, z_index: number, extrude: number, line_thickness: number, floors: any, floor_index: number, allIndexedMapObjects: Record<string, MapObj>, allIndexedRetailers: Record<string, IRetailer>, path: any, mode?: TMapMode): IMeshValues => {
-    const consolePrefix = 'MaterialAndGeometry';
-
+export const getMaterial = (
+    config: IConfig,
+    mesh_type: MeshType,
+    layer_name: string,
+    layer_color: Color | string,
+    mesh_transparent: boolean,
+    allIndexedMapObjects: Record<string, MapObj>,
+) => {
     const material_settings = {
         color: layer_color instanceof Color ? layer_color : hex_to_color(layer_color),
         side: DoubleSide,
@@ -81,6 +86,19 @@ export const getMaterialAndGeometry = (config: IConfig, mesh_type: MeshType, lay
     }
 
     material.transparent = material.opacity !== 1;
+
+    return material;
+}
+
+export const getGeometry = (
+    config: IConfig,
+    mesh_type: MeshType,
+    layer_name: string,
+    extrude: number,
+    line_thickness: number,
+    path: any,
+) => {
+    const consolePrefix = 'MaterialAndGeometry';
 
     let shapes = path.toShapes(true);
 
@@ -146,6 +164,29 @@ export const getMaterialAndGeometry = (config: IConfig, mesh_type: MeshType, lay
             console.error(e.message);
         }
     }
+
+    return geometry;
+}
+
+export const getMaterialAndGeometry = (config: IConfig, mesh_type: MeshType, layer_name: string, layer_color: Color | string, mesh_transparent: boolean, mesh_visible: boolean, z_index: number, extrude: number, line_thickness: number, floors: any, floor_index: number, allIndexedMapObjects: Record<string, MapObj>, allIndexedRetailers: Record<string, IRetailer>, path: any, mode?: TMapMode): IMeshValues => {
+    
+    const material = getMaterial(
+        config,
+        mesh_type,
+        layer_name,
+        layer_color,
+        mesh_transparent,
+        allIndexedMapObjects
+    );
+
+    const geometry = getGeometry(
+        config,
+        mesh_type,
+        layer_name,
+        extrude,
+        line_thickness,
+        path
+    );
 
     const mesh = new Mesh(geometry, material) as IExtMesh;
     mesh.object_id = layer_name;

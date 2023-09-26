@@ -3,7 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 export interface IAppProps {
     CENTER_ID?: string;
     mapitData?: unknown;
-    config?: IJsonConfig;
+    config?: Partial<IJsonConfig>;
     stats?: boolean;
     mode: TMapMode;
 }

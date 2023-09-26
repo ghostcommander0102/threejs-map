@@ -7,7 +7,7 @@ import {Mesh, Object3D} from "three";
 import {IAmenitiesInteractiveList, IExtMesh, IJsonConfig, IMeshParams, TMapMode} from "types";
 import {FloorsMap} from "./FloorsMap";
 import {useMapit2Data} from "../../useMapit2Data";
-import {MapIt2Response} from "../../mapitApiTypes";
+import {MapIt2Response, MapObj} from "../../mapitApiTypes";
 import { Stats } from '@react-three/drei';
 import UIComponent from "components/UIComponent";
 import {MapCenterMarker} from "./MapCenterMarker";
@@ -52,12 +52,12 @@ const amenitiesList: IAmenitiesInteractiveList[] = [
 interface ISceneComponentProps {
     CENTER_ID?: string;
     mapitData?: MapIt2Response;
-    config?: IJsonConfig;
+    config?: Partial<IJsonConfig>;
     stats?: boolean;
     selectedActiveObjectId: string;
     setSelectedActiveObjectId: React.Dispatch<React.SetStateAction<string>>;
     mode?: TMapMode;
-    handleChangeMapitData: (data: unknown) => void;
+    handleChangeMapitData: (index: number, data: MapObj) => void;
 }
 
 export interface IZoomData {
@@ -111,9 +111,6 @@ const SceneComponent = (params:ISceneComponentProps) => {
         let currKioskObj: Mesh | null = null;
         let currKioskFloorIndex = 0;
         if (config.KIOSKS && config.KIOSKS[config.KIOSK]) {
-            // console.log('looking for kiosk', config.KIOSK, config.KIOSKS[config.KIOSK])
-            // console.log('config.KIOSKS', config.KIOSKS)
-            // console.log('meshParams', meshParams)
             const kioskMapObjName = config.KIOSKS[config.KIOSK].map_obj_name;
             const currKioskMeshParams = meshParams.flat().find(mesh => mesh.object_id === kioskMapObjName);
             if (currKioskMeshParams) {
@@ -138,7 +135,8 @@ const SceneComponent = (params:ISceneComponentProps) => {
     }
 
     useEffect(() => {
-        const currKioskLogo = meshFloors.storeLogos.flat().find(storeLogo => storeLogo.storeLogo.object_id === 'custom-layer-' + (currKioskObj as IExtMesh).object_id)?.storeLogo;
+        console.debug({meshFloors});
+        const currKioskLogo = currKioskObj? meshFloors.storeLogos.flat().find(storeLogo => storeLogo.storeLogo.object_id === 'custom-layer-' + (currKioskObj as IExtMesh).object_id)?.storeLogo : null;
         if (currKioskLogo && mode !== 'edit') {
             currKioskLogo.userData.htmlContent = <MapCenterMarker />
         }
@@ -266,6 +264,9 @@ const SceneComponent = (params:ISceneComponentProps) => {
             {mode === 'edit' &&
                 <div className={styles['mapbox-admin-form']}>
                     <MapboxForm
+                        floorIndex={currentFloorIndex}
+                        meshFloors={meshFloors}
+                        config={config}
                         data={data}
                         setData={handleChangeMapitData}
                         selectedId={selectedActiveObjectId}
