@@ -14,54 +14,14 @@ export interface IAppProps {
     mode: TMapMode;
 }
 
-type TFormMapObjData = {
-  index: number,
-  data: MapObj,
-}
-
 function MapBox({ CENTER_ID, mapitData, config, stats, mode }: IAppProps) {
 
   const [selectedActiveObjectId, setSelectedActiveObjectId] = useState<string>('');
   const [mapData, setMapData] = useState<any>(undefined);
-  const [formMapObjData, setFormMapObjData] = useState<TFormMapObjData[]>([]);
 
   useEffect(() => {
     setMapData(mapitData);
   }, [mapitData])
-
-  const handleChangeMapitData = (index: number,newData: MapObj) => {
-    const itemIndex = formMapObjData.findIndex((item) => item.data.id === newData.id);
-
-    if (itemIndex !== -1) {
-      formMapObjData[itemIndex] = {index, data: {...newData}};
-    } else {
-      formMapObjData.push({index, data: {...newData}})
-    }
-
-    setFormMapObjData([...formMapObjData]);
-    console.group('handleChangeMapitData')
-    console.debug({newData});
-    console.debug({formMapObjData});
-    console.groupEnd();
-  }
-
-  const getMapitData = (): MapIt2Response => {
-    if (mapData && mapData.map_objs) {
-      if (formMapObjData) {
-        formMapObjData.forEach((value) => {
-          const index = mapData.map_objs.findIndex((item: MapObj) => item.id === value.data.id);
-          if (index !== -1) {
-            console.debug({index});
-            mapData.map_objs[index] = { ...value.data };
-          }
-        })
-        console.debug({formMapObjData: {...formMapObjData}});
-        console.debug({map_objs: {...mapData.map_objs}});
-      }
-    }
-
-    return mapData;
-  }
 
   if (!mapitData && !CENTER_ID) {
     console.error('Please provide either mapitData or CENTER_ID');
@@ -75,7 +35,7 @@ function MapBox({ CENTER_ID, mapitData, config, stats, mode }: IAppProps) {
   return (
     <MeshObjectContextProvider>
       <div className={`${styles['mapbox-component']} ${mode !== 'edit'? styles.view : ''}`}>
-          <SceneComponent setSelectedActiveObjectId={setSelectedActiveObjectId} selectedActiveObjectId={selectedActiveObjectId} stats={stats} mapitData={getMapitData()} CENTER_ID={CENTER_ID} config={config} mode={mode} handleChangeMapitData={handleChangeMapitData}  />
+          <SceneComponent setSelectedActiveObjectId={setSelectedActiveObjectId} selectedActiveObjectId={selectedActiveObjectId} stats={stats} mapitData={mapData} CENTER_ID={CENTER_ID} config={config} mode={mode} />
         <div className={styles.hide}>
           <div id="map-special-svg-kiosk">
             <svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 443.83 787.21">

@@ -2,14 +2,15 @@ import { HtmlProps } from "@react-three/drei/web/Html";
 import { useThree } from "@react-three/fiber";
 import { MeshType, getMaterial } from "Hooks/useMeshFloors/getMaterialAndGeometry";
 import { useMeshObjectContext } from "contexts/MeshObjectContextProvider";
-import { hex_to_color } from "helpers/misc";
-import { MapObj } from "mapitApiTypes";
+import { getImage, layer_text_logo_position_by_id, processImage } from "helpers/draw.logo.helpers";
+import { getFormatedColor, hex_to_color } from "helpers/misc";
+import { IRetailer, MapObj } from "mapitApiTypes";
 import { MouseEventHandler, SyntheticEvent, useEffect, useRef, useState, useTransition } from "react";
 import { Button, Col, Form, FormControl, FormControlProps, Nav, Row, Tab, Tabs } from "react-bootstrap"
 import { DoubleSide, Euler, MeshBasicMaterial, MeshPhongMaterial, Object3D, Vector3 } from "three";
 // import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry";
-import { TextGeometry } from "three-stdlib";
-import { IConfig, IJsonConfig, IMeshParamsTmp } from "types";
+import { Geometry, TextGeometry } from "three-stdlib";
+import { IConfig, IExtMesh, IJsonConfig, IMeshParamsTmp } from "types";
 
 
 
@@ -69,12 +70,26 @@ const MapboxForm = (params: IMapboxForm) => {
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
     const [isPending, startTransition] = useTransition();
 
+    useEffect(() => {
+        switch(mainTabKey) {
+            case 'retailer':
+                console.debug({
+                    formData,
+                    mainTabKey,
+                    retailerTabsKey
+                })
+                handleChangeTab(retailerTabsKey);
+                break;
+        }
+    }, [formData, mainTabKey, retailerTabsKey])
+
     const handleChangeTab = (k:  any | null) => {
+        console.debug({handleChangeTab: k});
         const key: TMainTabsKey | TRetailerTabsKey | TSpecialTabsKey | null = k;
         if (key !== null) {
             if (isTMainTabsKey(key)) {
                 setMainTabKey(key);
-                if (formData.id && formData.obj_type !== key && mainTabKey && key && mainTabKey !== key) {
+                if (formData.id && formData.obj_type !== key && mainTabKey && key) {
                     formData.obj_type = key;
                     if (key === 'retailer') {
                         formData.layer_type = 'retail_name';
@@ -95,17 +110,48 @@ const MapboxForm = (params: IMapboxForm) => {
                 }
             } else if (isTRetailerTabsKey(key)) {
                 setRetailerTabsKey(key);
-                if (formData.id && formData.layer_type !== key && retailerTabsKey && key && retailerTabsKey !== key) {
+                if (formData.id && retailerTabsKey && key) {
                     formData.layer_type = key;
-                    setRetailerTabsKey('');
-                    setFormData({...formData});
+                    if (formData.layer_type !== key) {
+                        setFormData({ ...formData });
+                    }
                     updateData({
                         ...formData,
                     })
+                    if (['retail_name', 'custom_text', 'retail_text'].includes(key)) {
+                        let text = '';
+                        switch (key) {
+                            case 'retail_name':
+                                const retailIndex = data.retailers.findIndex((item: IRetailer) => formData.retailer_id === item.id);
+                                if (retailIndex !== -1) {
+                                    text = data.retailers[retailIndex].retail_name;
+                                    console.debug({
+                                        retailer: data.retailers[retailIndex],
+                                    })
+                                }
+                                break;
+                            case 'retail_text':
+                            case 'custom_text':
+                                text = formData.custom_text;
+                                break;
+                        }
+                        if (context && context.MeshObject) {
+                            const obj = context.MeshObject[1];
+                            makeTextGeometry(obj, text, formData.size);
+                        }
+                    }
+
+                    if (['retail_logo', 'custom_image'].includes(key)) {
+                        context?.MeshObject?.forEach((obj, index) => {
+                            if (index === 0) return;
+
+                            makeImage(formData, obj);
+                        })
+                    }
                 }
             } else if (isTSpecialTabsKey(key)) {
                 setSpecialTabsKey(key);
-                if (formData.id && formData.layer_type !== key && specialTabsKey && key && specialTabsKey !== key) {
+                if (formData.id && formData.layer_type !== key && specialTabsKey && key) {
                     formData.layer_type = key;
                     formData.kiosk_id = '';
                     formData.retailer_id = '';
@@ -140,17 +186,10 @@ const MapboxForm = (params: IMapboxForm) => {
     }
 
     const updateData = (formData: MapObj) => {
-        // setFormData({...formData});
         const index = data.map_objs.findIndex((value: MapObj) => value.id === formData.id);
         if (index !== -1) {
             data.map_objs[index] = { ...formData };
-            setData(index, { ...data });
-            // if (timeoutRef.current) {
-            //     clearTimeout(timeoutRef.current);
-            // }
-
-            // timeoutRef.current = setTimeout(() => {
-            // }, 300);
+            setData(index, { ...formData });
         }
     }
 
@@ -169,6 +208,10 @@ const MapboxForm = (params: IMapboxForm) => {
             formData.retailer_id = '';
             setFormData({...formData});
             updateData({...formData});
+            context?.MeshObject?.forEach((obj, index) => {
+                if (index === 0) return;
+                makeImage(formData, obj);
+            })
         }
     }
 
@@ -177,15 +220,63 @@ const MapboxForm = (params: IMapboxForm) => {
             formData.value = e.target.value; 
             setFormData({...formData});
             updateData({...formData});
+            context?.MeshObject?.forEach((obj, index) => {
+                if (index === 0) return;
+                makeImage(formData, obj);
+            })
+        }
+    }
+
+    const makeTextGeometry = (obj: IExtMesh, text: string, size: string) => {
+        let text_geometry = new TextGeometry(text, {
+            font: obj.userData.font,
+            size: parseInt(size),
+            height: 0.01,
+            curveSegments: 4,
+        });
+        text_geometry.center();
+        obj.geometry.dispose();
+        obj.geometry = text_geometry;
+    }
+
+    const makeImage = (formData: MapObj, obj: IExtMesh) => {
+        let img = null;
+        if (formData.layer_type === 'retail_logo') {
+            const retailIndex = data.retailers.findIndex((item: IRetailer) => formData.retailer_id === item.id);
+            if (retailIndex !== -1) {
+                img = getImage(formData, data.retailers[retailIndex]);
+            }
+        } else {
+            img = getImage(formData);
+        }
+        if (img instanceof HTMLImageElement) {
+            processImage(img, formData, (geometry, material) => {
+                obj.geometry = geometry;
+                obj.material = material;
+
+                const boundingBox = geometry.boundingBox;
+
+                const mesh_center_point = new Vector3();
+                if (boundingBox) {
+                    boundingBox.getCenter(mesh_center_point);
+
+                    const mesh_size = new Vector3();
+                    boundingBox.getSize(mesh_size);
+                    if (obj.object_id) {
+                        layer_text_logo_position_by_id(obj.object_id, mesh_center_point, mesh_size, obj, { [obj.object_id]: { ...formData } });
+                    }
+                }
+            });
         }
     }
 
     const changeValue = (name: string, value: string) => {
-        if (name === 'custom_image' && context?.MeshObject && context.MeshObject.length <= 1) {
-            formData.custom_image = value;
-            setFormData({...formData});
-            updateData({...formData});
-        }
+        // if (name === 'custom_image' && context?.MeshObject && context.MeshObject.length <= 1) {
+        //     formData.custom_image = value;
+        //     setFormData({...formData});
+        //     updateData({...formData});
+        // }
+
         context?.MeshObject?.forEach((obj, index) => {
             if (!obj.userData.position) {
                 obj.userData.position = new Vector3();
@@ -198,20 +289,13 @@ const MapboxForm = (params: IMapboxForm) => {
                     if (index === 0) break;
                     formData.custom_text = value;
                     if (['retail_text', 'custom_text'].includes(formData.layer_type)) {
-                        let text_geometry = new TextGeometry(formData.custom_text, {
-                            font: obj.userData.font,
-                            size: parseInt(formData.size),
-                            height: 0.01,
-                            curveSegments: 4,
-                        });
-                        text_geometry.center();
-                        obj.geometry.dispose();
-                        obj.geometry = text_geometry;
+                        makeTextGeometry(obj, formData.custom_text, formData.size);
                     }
                     break;
                 case 'custom_image':
                     if (index === 0) break;
                     formData.custom_image = value;
+                    makeImage(formData, obj);
                     updateData({
                         ...formData,
                     })
@@ -222,20 +306,16 @@ const MapboxForm = (params: IMapboxForm) => {
                     if (!(['retail_logo', 'kiosk', 'amenity', 'custom_image'].includes(formData.layer_type))) {
                         let text = '';
                         if (formData.layer_type === 'retail_name' && obj.userData.retail_name) {
-                            text = obj.userData.retail_name;
+                            const retailIndex = data.retailers.findIndex((item: IRetailer) => formData.retailer_id === item.id);
+                            if (retailIndex !== -1) {
+                                text = data.retailers[retailIndex].retail_name;
+                            }
                         } else if (['retail_text', 'custom_text'].includes(formData.layer_type)) {
                             text = formData.custom_text;
                         }
-                        let text_geometry = new TextGeometry(text, {
-                            font: obj.userData.font,
-                            size: parseInt(formData.size),
-                            height: 0.01,
-                            curveSegments: 4,
-                        });
-                        text_geometry.center();
-                        obj.geometry.dispose();
-                        obj.geometry = text_geometry;
+                        makeTextGeometry(obj, text, formData.size);
                     } else if (formData.layer_type === 'retail_logo' || formData.layer_type === 'custom_image') {
+                        makeImage(formData, obj);
                         if (timeoutRef.current) {
                             clearInterval(timeoutRef.current);
                         }
@@ -293,6 +373,7 @@ const MapboxForm = (params: IMapboxForm) => {
                         formData.layer_type === 'custom_image' ||
                         (formData.obj_type === 'special' && formData.layer_type === 'kiosk' && formData.kiosk_id != null) ||
                         (formData.obj_type === 'special' && formData.layer_type === 'amenity' && formData.value !== '')) {
+                        makeImage(formData, obj);
                         startTransition(() => {
                             updateData({
                                 ...formData,
@@ -325,8 +406,9 @@ const MapboxForm = (params: IMapboxForm) => {
             }
             startTransition(() => {
                 setFormData({ ...formData })
-                setData(0, { ...data });
+                updateData({ ...formData });
             });
+
         })
     }
     const handleChange = (e: any) => {
@@ -397,7 +479,7 @@ const MapboxForm = (params: IMapboxForm) => {
                                 </Nav.Item>
                             </Nav>
                         </Col>
-                        <Col sm="3">
+                        <Col sm="3" className="px-0">
                             {/* 
                 //@ts-ignore */}
                             <Button variant="danger" className="mb-3" onClick={handleReset}>Reset</Button>
@@ -519,7 +601,7 @@ const MapboxForm = (params: IMapboxForm) => {
                     </Col>
                     <Col sm="8">
                         <Row>
-                            <Col sm="2" className="d-flex">
+                            <Col sm="4" className="d-flex">
                                 <Button onClick={handleDecrement('size')} variant="outline-dark">-</Button>
                             </Col>
                             <Col sm="4">
@@ -530,7 +612,7 @@ const MapboxForm = (params: IMapboxForm) => {
                                     onChange={handleChange}
                                 />
                             </Col>
-                            <Col sm="2" className="d-flex justify-content-end">
+                            <Col sm="4" className="d-flex justify-content-end">
                                 <Button onClick={handleIncrement('size')} variant="outline-dark">+</Button>
                             </Col>
                         </Row>
@@ -542,7 +624,7 @@ const MapboxForm = (params: IMapboxForm) => {
                     </Col>
                     <Col sm="8">
                         <Row>
-                            <Col sm="2" className="d-flex">
+                            <Col sm="4" className="d-flex">
                                 <Button onClick={handleDecrement('rotate')} variant="outline-dark">-</Button>
                             </Col>
                             <Col sm="4">
@@ -553,7 +635,7 @@ const MapboxForm = (params: IMapboxForm) => {
                                     onChange={handleChange}
                                 />
                             </Col>
-                            <Col sm="2" className="d-flex justify-content-end">
+                            <Col sm="4" className="d-flex justify-content-end">
                                 <Button onClick={handleIncrement('rotate')} variant="outline-dark">+</Button>
                             </Col>
                         </Row>
@@ -565,7 +647,7 @@ const MapboxForm = (params: IMapboxForm) => {
                     </Col>
                     <Col sm="8">
                         <Row>
-                            <Col sm="2" className="d-flex">
+                            <Col sm="4" className="d-flex">
                                 <Button onClick={handleDecrement('offsetX')} variant="outline-dark">-</Button>
                             </Col>
                             <Col sm="4">
@@ -577,7 +659,7 @@ const MapboxForm = (params: IMapboxForm) => {
                                     onChange={handleChange}
                                 />
                             </Col>
-                            <Col sm="2" className="d-flex justify-content-end">
+                            <Col sm="4" className="d-flex justify-content-end">
                                 <Button onClick={handleIncrement('offsetX')} variant="outline-dark">+</Button>
                             </Col>
                         </Row>
@@ -589,7 +671,7 @@ const MapboxForm = (params: IMapboxForm) => {
                     </Col>
                     <Col sm="8">
                         <Row>
-                            <Col sm="2" className="d-flex">
+                            <Col sm="4" className="d-flex">
                                 <Button onClick={handleDecrement('offsetY')} variant="outline-dark">-</Button>
                             </Col>
                             <Col sm="4">
@@ -600,7 +682,7 @@ const MapboxForm = (params: IMapboxForm) => {
                                     onChange={handleChange}
                                 />
                             </Col>
-                            <Col sm="2" className="d-flex justify-content-end">
+                            <Col sm="4" className="d-flex justify-content-end">
                                 <Button onClick={handleIncrement('offsetY')} variant="outline-dark">+</Button>
                             </Col>
                         </Row>
@@ -614,7 +696,7 @@ const MapboxForm = (params: IMapboxForm) => {
                         <Form.Control
                             name="bg_color"
                             type="string"
-                            value={formData.bg_color}
+                            value={getFormatedColor(formData.bg_color)}
                             onChange={handleChange}
                         />
                     </Col>
@@ -622,7 +704,7 @@ const MapboxForm = (params: IMapboxForm) => {
                         <Form.Control
                             type="color"
                             name="bg_color"
-                            value={formData.bg_color}
+                            value={getFormatedColor(formData.bg_color)}
                             onChange={handleChange}
                         />
                     </Col>
@@ -658,7 +740,7 @@ const MapboxForm = (params: IMapboxForm) => {
                             <Form.Control
                                 type="string"
                                 name="text_color"
-                                value={formData.text_color}
+                                value={getFormatedColor(formData.text_color)}
                                 onChange={handleChange}
                             />
                         </Col>
@@ -666,7 +748,7 @@ const MapboxForm = (params: IMapboxForm) => {
                             <Form.Control
                                 name="text_color"
                                 type="color"
-                                value={formData.text_color}
+                                value={getFormatedColor(formData.text_color)}
                                 onChange={handleChange}
                             />
                         </Col>
@@ -681,7 +763,7 @@ const MapboxForm = (params: IMapboxForm) => {
                             <Form.Control
                                 type="string"
                                 name="text_color"
-                                value={formData.text_color}
+                                value={getFormatedColor(formData.text_color)}
                                 onChange={handleChange}
                             />
                         </Col>
@@ -689,7 +771,7 @@ const MapboxForm = (params: IMapboxForm) => {
                             <Form.Control
                                 type="color"
                                 name="text_color"
-                                value={formData.text_color}
+                                value={getFormatedColor(formData.text_color)}
                                 onChange={handleChange}
                             />
                         </Col>

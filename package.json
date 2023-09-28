@@ -1,6 +1,6 @@
 {
   "name": "center-portal-map-pkg",
-  "version": "1.4.50",
+  "version": "1.4.102",
   "type": "module",
   "source": "src/index.ts",
   "main": "dist/index.js",
