@@ -71,7 +71,7 @@ function layer_text_logo_position(mesh: Mesh, newMeshPos: Vector3, mesh_size: Ve
     if (!object_id) return;
     return layer_text_logo_position_by_id(object_id, newMeshPos, mesh_size, newMesh, allIndexedMapObjects);
 }
-function layer_text_logo_position_by_id(object_id: string, newMeshPos: Vector3, mesh_size: Vector3, newMesh: Mesh, allIndexedMapObjects: Record<any, any>) {
+export function layer_text_logo_position_by_id(object_id: string, newMeshPos: Vector3, mesh_size: Vector3, newMesh: Mesh, allIndexedMapObjects: Record<any, any>) {
     let map_obj = allIndexedMapObjects[object_id];
 
     let offsetX = parseInt(map_obj.offsetX);
@@ -174,46 +174,54 @@ function layer_text_logo_position_by_id(object_id: string, newMeshPos: Vector3, 
         getImageLogo(allIndexedRetailers, map_obj, mesh, mesh_center_point, mesh_size);
     }
 }*/
-
-function getImageLogo(allIndexedRetailers: Record<string, any>, map_obj: Record<string, any>, mesh: BufferGeometry,object_id: string, new_object_id: string | null, mesh_center_point: Vector3, mesh_size: Vector3, floors: any, handleAsync: (meshLogo: {storeLogo: Object3D}) => void): void {
-
-    const img = new Image();
-    img.crossOrigin = 'Anonymous';
-    if (map_obj.obj_type == 'retailer') {
-        img.src = allIndexedRetailers[map_obj.retailer_id].logo;
-    } else if (map_obj.obj_type == 'special') {
-        
-        let svg_image_name = map_obj.value;
-        if (map_obj.layer_type == 'kiosk') svg_image_name = 'kiosk';
-        if (svg_image_name) {
-            let svg_color = '222222';
-            if (map_obj.text_color != null) {
-                svg_color = map_obj.text_color;
+export const getImage = (map_obj: Record<string, any>, retailer?: IRetailer): HTMLImageElement | null => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        if (map_obj.obj_type == 'retailer') {
+            if (retailer) {
+                img.src = retailer.logo;
+            } else {
+                console.error('retailer not found');
+                return null;
             }
-
-            const svg_block = document.getElementById('map-special-svg-' + svg_image_name)
-            if (!svg_block) {
-                console.error('svg_block not found', svg_image_name);
-                return;
+        } else if (map_obj.obj_type == 'special') {
+    
+            let svg_image_name = map_obj.value;
+            if (map_obj.layer_type == 'kiosk') svg_image_name = 'kiosk';
+            if (svg_image_name) {
+                let svg_color = '222222';
+                if (map_obj.text_color != null) {
+                    svg_color = map_obj.text_color;
+                }
+    
+                const svg_block = document.getElementById('map-special-svg-' + svg_image_name)
+                if (!svg_block) {
+                    console.error('svg_block not found', svg_image_name);
+                    return null;
+                }
+                const svg_element = svg_block.querySelector("svg");
+                if (!svg_element) {
+                    console.error('svg_element not found', svg_image_name);
+                    return null;
+                }
+    
+                const svgColoredParts = svg_element.querySelectorAll('[fill]');
+                svgColoredParts.forEach((svgColoredPart) => {
+                    svgColoredPart.setAttribute('fill', '#' + svg_color);
+                })
+    
+                const svgData = (new XMLSerializer()).serializeToString(svg_element);
+                img.src = "data:image/svg+xml;base64," + window.btoa(unescape(encodeURIComponent(svgData)));
             }
-            const svg_element = svg_block.querySelector("svg");
-            if (!svg_element) {
-                console.error('svg_element not found', svg_image_name);
-                return;
-            }
-
-            const svgColoredParts = svg_element.querySelectorAll('[fill]');
-            svgColoredParts.forEach((svgColoredPart) => {
-                svgColoredPart.setAttribute('fill', '#' + svg_color);
-            })
-
-            const svgData = (new XMLSerializer()).serializeToString(svg_element);
-            img.src = "data:image/svg+xml;base64," + window.btoa(unescape(encodeURIComponent(svgData)));
+    
+        } else {
+            img.src = map_obj.custom_image;
         }
-        
-    } else {
-        img.src = map_obj.custom_image;
-   }
+
+        return img;
+}
+
+export const processImage = (img: HTMLImageElement, map_obj: Record<string, any>, afterOnload: (geometry: PlaneGeometry, material: MeshBasicMaterial) => void) => {
     img.onload = function () {
         const c = document.createElement("canvas");
         const ctx = c.getContext("2d");
@@ -234,6 +242,18 @@ function getImageLogo(allIndexedRetailers: Record<string, any>, map_obj: Record<
             depthTest: false,
             depthWrite: false,
         });
+        
+        afterOnload(geometry, material);
+    };
+}
+
+function getImageLogo(allIndexedRetailers: Record<string, any>, map_obj: Record<string, any>, mesh: BufferGeometry,object_id: string, new_object_id: string | null, mesh_center_point: Vector3, mesh_size: Vector3, floors: any, handleAsync: (meshLogo: {storeLogo: Object3D}) => void): void {
+
+    const img = getImage(map_obj, allIndexedRetailers[map_obj.retailer_id]);
+
+    if (img === null) return;
+
+    processImage(img, map_obj, (geometry, material) => {
         const logoMesh = new Mesh(geometry, material) as IExtMesh;
 
         // @ts-ignore
@@ -261,7 +281,8 @@ function getImageLogo(allIndexedRetailers: Record<string, any>, map_obj: Record<
         handleAsync({storeLogo: BoundingSphereMesh});
         */
         handleAsync({storeLogo: logoMesh});
-    };
+    })
+
 }
 
 
@@ -296,7 +317,7 @@ export function get_store_name_logo_geo(geometry: BufferGeometry, object_id:stri
         } else if (['retail_text', 'custom_text'].includes(map_obj.layer_type)) {
             text = map_obj.custom_text;
         } else {
-            return false;
+            text = '';
         }
 
         let text_color = config.STORE_TEXT_COLOR;

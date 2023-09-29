@@ -9,10 +9,14 @@ interface ISceneComponentProps {
     selectedActiveObjectId: string;
     setSelectedActiveObjectId: React.Dispatch<React.SetStateAction<string>>;
     mode?: TMapMode;
-    handleChangeMapitData: (index: number, data: MapObj) => void;
+    onMapDataUpdate?: (data: MapObj[]) => void;
 }
 export interface IZoomData {
     direction: 'in' | 'out';
 }
+export type TFormMapObjData = {
+    index: number;
+    data: MapObj;
+};
 declare const SceneComponent: (params: ISceneComponentProps) => import("react/jsx-runtime").JSX.Element;
 export default SceneComponent;

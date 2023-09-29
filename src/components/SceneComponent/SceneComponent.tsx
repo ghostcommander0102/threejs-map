@@ -57,18 +57,24 @@ interface ISceneComponentProps {
     selectedActiveObjectId: string;
     setSelectedActiveObjectId: React.Dispatch<React.SetStateAction<string>>;
     mode?: TMapMode;
-    handleChangeMapitData: (index: number, data: MapObj) => void;
+    onMapDataUpdate?: (data: MapObj[]) => void;
 }
 
 export interface IZoomData {
     direction: 'in' | 'out';
 }
 
+export type TFormMapObjData = {
+  index: number,
+  data: MapObj,
+}
+
 const SceneComponent = (params:ISceneComponentProps) => {
     const data = useMapit2Data({ mapitData:params.mapitData, CENTER_ID: params.CENTER_ID });
     const [selectedFloorIndex, setSelectedFloorIndex] = useState<number>(-1);
+    const [formMapObjData, setFormMapObjData] = useState<TFormMapObjData[]>([]);
 
-    const { selectedActiveObjectId, setSelectedActiveObjectId } = params;
+    const { selectedActiveObjectId, setSelectedActiveObjectId, onMapDataUpdate } = params;
 
     const [amenityTargetType, setAmenityTargetType] = useState<string>('');
     const [zoom, setZoom] = useState<IZoomData | null>(null);
@@ -77,7 +83,7 @@ const SceneComponent = (params:ISceneComponentProps) => {
         setSelectedFloorIndex(floorIndex);
     }
 
-    const { mode, handleChangeMapitData } = params;
+    const { mode } = params;
 
     const meshFloors = useMeshFloors(data, params.config, mode);
     const mapCenterMarkerRef = useRef(null);
@@ -97,6 +103,34 @@ const SceneComponent = (params:ISceneComponentProps) => {
     } else if (amenityTargetType) {
         activeObjectId = '';
     }
+
+    const handleChangeMapitData = (index: number, newData: MapObj) => {
+        const itemIndex = formMapObjData.findIndex((item) => item.data.id === newData.id);
+
+        if (itemIndex !== -1) {
+            formMapObjData[itemIndex] = { index, data: { ...newData } };
+        } else {
+            formMapObjData.push({ index, data: { ...newData } })
+        }
+
+        setFormMapObjData([...formMapObjData]);
+    }
+
+  const getMapitData = (): MapIt2Response | null => {
+    if (data && data.map_objs) {
+      if (formMapObjData) {
+        formMapObjData.forEach((value) => {
+          const index = data.map_objs.findIndex((item: MapObj) => item.id === value.data.id);
+          if (index !== -1) {
+            data.map_objs[index] = { ...value.data };
+          }
+        })
+      }
+    }
+
+    return data;
+  }
+
 
     useEffect(() => {
         // console.log('useEffect currentHoveredObject', currentHoveredObject)
@@ -135,7 +169,6 @@ const SceneComponent = (params:ISceneComponentProps) => {
     }
 
     useEffect(() => {
-        console.debug({meshFloors});
         const currKioskLogo = currKioskObj? meshFloors.storeLogos.flat().find(storeLogo => storeLogo.storeLogo.object_id === 'custom-layer-' + (currKioskObj as IExtMesh).object_id)?.storeLogo : null;
         if (currKioskLogo && mode !== 'edit') {
             currKioskLogo.userData.htmlContent = <MapCenterMarker />
@@ -157,6 +190,16 @@ const SceneComponent = (params:ISceneComponentProps) => {
             //@ts-ignore
         }
     }, [meshFloors])
+
+    useEffect(() => {
+        if (onMapDataUpdate) {
+            const exportData: MapObj[] = [];
+
+            formMapObjData.forEach((value) => {
+                exportData.push({...value.data});
+            })
+        }
+    }, [formMapObjData])
 
     const handleMeshObjectContext = (object: IExtMesh) => {
         if (meshObjectContext?.SetMeshObject) {
@@ -267,7 +310,7 @@ const SceneComponent = (params:ISceneComponentProps) => {
                         floorIndex={currentFloorIndex}
                         meshFloors={meshFloors}
                         config={config}
-                        data={data}
+                        data={getMapitData()}
                         setData={handleChangeMapitData}
                         selectedId={selectedActiveObjectId}
                         centerId={params.CENTER_ID as string}
