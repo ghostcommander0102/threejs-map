@@ -161,7 +161,7 @@ export interface ExIntersection extends THREE.Intersection {
 export type ExThreeEvent<TEvent> = IntersectionEvent<TEvent> & Properties<TEvent> & ExIntersection;
 
 export interface IFloorSelectorProps {
-    floors: number,
+    floors: IFloorData[],
     selectedFloorIndex: number,
     handleFloorChange: (floorIndex: number) => MouseEventHandler<HTMLDivElement>
     accentColor: string,

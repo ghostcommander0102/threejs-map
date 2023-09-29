@@ -73,18 +73,12 @@ const MapboxForm = (params: IMapboxForm) => {
     useEffect(() => {
         switch(mainTabKey) {
             case 'retailer':
-                console.debug({
-                    formData,
-                    mainTabKey,
-                    retailerTabsKey
-                })
                 handleChangeTab(retailerTabsKey);
                 break;
         }
     }, [formData, mainTabKey, retailerTabsKey])
 
     const handleChangeTab = (k:  any | null) => {
-        console.debug({handleChangeTab: k});
         const key: TMainTabsKey | TRetailerTabsKey | TSpecialTabsKey | null = k;
         if (key !== null) {
             if (isTMainTabsKey(key)) {
@@ -125,9 +119,6 @@ const MapboxForm = (params: IMapboxForm) => {
                                 const retailIndex = data.retailers.findIndex((item: IRetailer) => formData.retailer_id === item.id);
                                 if (retailIndex !== -1) {
                                     text = data.retailers[retailIndex].retail_name;
-                                    console.debug({
-                                        retailer: data.retailers[retailIndex],
-                                    })
                                 }
                                 break;
                             case 'retail_text':

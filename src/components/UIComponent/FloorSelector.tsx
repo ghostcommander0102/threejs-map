@@ -20,7 +20,7 @@ const FloorButton = ({isActive, onClick, text }: TFloorButtonProps) => {
 
 const FloorSelector = ({floors, selectedFloorIndex, handleFloorChange, accentColor}: IFloorSelectorProps) => {
     const floorButtons: Array<TFloorButtonProps & {key: string}> = [];
-    for (let i = 0; i < floors; i++) {
+    for (let i = 0; i < floors.length; i++) {
         const style = {display: 'flex', cursor: 'pointer', background: 'white'};
         if (i === selectedFloorIndex) {
             style.background = accentColor;
@@ -29,7 +29,7 @@ const FloorSelector = ({floors, selectedFloorIndex, handleFloorChange, accentCol
             key: `floor-change-btn-${i}`,
             isActive: i === selectedFloorIndex,
             onClick: handleFloorChange(i),
-            text: `Floor ${i + 1}`,
+            text: floors[i].title,
         })
     }
 

@@ -45,15 +45,6 @@ export const FloorsMap = (params:IFloorsMapProps) => {
     const from = (currKioskObj as IExtMesh).object_id;
 
     useEffect(() => {
-        (() => {
-            let n = 0;
-            scene.traverse(() => ++n);
-
-            console.debug('Count:', n);
-        })()
-    }, [params.meshFloors, scene])
-
-    useEffect(() => {
         if (!amenityTargetType || mode === 'edit') {
             setRouteTubes([]);
             return;
@@ -91,7 +82,6 @@ export const FloorsMap = (params:IFloorsMapProps) => {
         // }
 
 
-        console.log('new route', route)
         setRouteTubes(route);
 
     }, [ from, routeTargetId, scene, camera, floors, accentColor, pathFinderGraph, style, meshFloors.escalator_nodes ]);

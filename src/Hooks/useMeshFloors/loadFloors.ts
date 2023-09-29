@@ -65,6 +65,15 @@ export function loadFloors(floors:IFloorData[], config:IConfig, results:SVGResul
                         path,
                         mode
                     );
+
+                    if (layer_name.startsWith('kiosk-')) {
+                        if (mode === 'view') {
+                            meshParams.mesh.visible = false;
+                            //@ts-ignore
+                            meshParams.mesh.material.visible = false;
+                        }
+                    }
+
                     if (!GeometriesAndMaterials[floor_index]) {
                         GeometriesAndMaterials[floor_index] = [];
                     }
