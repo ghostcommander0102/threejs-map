@@ -323,6 +323,7 @@ const MapboxForm = (params: IMapboxForm) => {
                             updateData({ ...formData });
                         }, 300);
                     } else if (['amenity', 'kiosk'].includes(formData.layer_type)) {
+                        makeImage(formData, obj);
                         startTransition(() => {
                             setFormData({ ...formData });
                             updateData({ ...formData });

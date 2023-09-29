@@ -200,6 +200,9 @@ export const getMaterialAndGeometry = (config: IConfig, mesh_type: MeshType, lay
             storeName = allIndexedRetailers[allIndexedMapObjects[layer_name].retailer_id].retail_name;
         } else if (['retail_text', 'custom_text'].includes(allIndexedMapObjects[layer_name].layer_type)) {
             storeName = allIndexedMapObjects[layer_name].custom_text;
+            if (storeName === '' && allIndexedMapObjects[layer_name].retailer_id && allIndexedRetailers[allIndexedMapObjects[layer_name].retailer_id]) {
+                storeName = allIndexedRetailers[allIndexedMapObjects[layer_name].retailer_id].retail_name;
+            }
         }
     }
     mesh.userData.storeName = storeName;
