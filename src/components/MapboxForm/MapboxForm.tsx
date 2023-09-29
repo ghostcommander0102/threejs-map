@@ -532,7 +532,7 @@ const MapboxForm = (params: IMapboxForm) => {
                         <Tab eventKey="kiosk" title="Kiosk">
                             <Form.Select className="m-3" aria-label="Choose a Retailer" value={formData.kiosk_id?? ''} onChange={handleChangeKiosk}>
                                 <option value={''} disabled hidden>Choose a Kiosk...</option>
-                                {data.kiosks?.map((value: any) => <option key={`kiosk-${value.id}`} value={value.id}>{value.title}</option>)}
+                                {data.kiosks?.map((value: any, index: number) => <option key={`kiosk-${value.id}-${index}`} value={value.id}>{value.title}</option>)}
                             </Form.Select>
                         </Tab>
                         <Tab eventKey="amenity" title="Amenity">
@@ -726,7 +726,7 @@ const MapboxForm = (params: IMapboxForm) => {
                                     ></Form.Control> */}
                             </Col>
                             <Col sm="9" className="p-0">
-                                <Form.Label for="transparent" className="mb-0">Transparent</Form.Label>
+                                <Form.Label htmlFor="transparent" className="mb-0">Transparent</Form.Label>
                             </Col>
                         </Row>
                     </Col>

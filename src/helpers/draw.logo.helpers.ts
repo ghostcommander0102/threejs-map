@@ -317,7 +317,7 @@ export function get_store_name_logo_geo(geometry: BufferGeometry, object_id:stri
         } else if (['retail_text', 'custom_text'].includes(map_obj.layer_type)) {
             text = map_obj.custom_text;
         } else {
-            return false;
+            text = '';
         }
 
         let text_color = config.STORE_TEXT_COLOR;
