@@ -1,4 +1,4 @@
-import { IMeshParams, TMapMode } from "../../types";
+import { IMeshParams } from "../../types";
 import { ThreeEvent } from "@react-three/fiber";
 import { MouseEventHandler } from "react";
 import { Mesh } from "three";
@@ -15,7 +15,6 @@ interface IMapProps {
     onPointerMove?: (e: ThreeEvent<PointerEvent>) => void;
     onClick?: (e: ThreeEvent<MouseEvent>) => void;
     handleChangeFloor: (index: number) => MouseEventHandler<HTMLDivElement>;
-    mode?: TMapMode;
 }
 export declare const Map: (params: IMapProps) => import("react/jsx-runtime").JSX.Element;
 export {};

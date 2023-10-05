@@ -320,8 +320,8 @@ export function get_store_name_logo_geo(geometry: BufferGeometry, object_id:stri
             text = '';
         }
 
-        let text_color = config.STORE_TEXT_COLOR;
-        if (map_obj.text_color != null) {
+        let text_color = hex_to_color(config.STORE_TEXT_COLOR);
+        if (map_obj.text_color) {
             text_color = hex_to_color(map_obj.text_color);
         }
 

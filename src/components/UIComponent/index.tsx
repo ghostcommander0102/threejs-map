@@ -1,15 +1,15 @@
-import { IAmenitiesInteractiveList, IFloorSelectorProps, TMapMode } from "types"
-import FloorSelector from "./FloorSelector"
+import { IAmenitiesInteractiveList, IFloorSelectorProps, TMapMode, TRoles } from "src/types";
+import FloorSelector from "./FloorSelector";
 import { MouseEventHandler } from "react";
 import styles from '../../MapBox.module.css';
-import ATM from "components/Icons/ATM";
-import DogPoopStation from "components/Icons/DogPoopStation";
-import Elevator from "components/Icons/Elevator";
-import FamilyRestroom from "components/Icons/FamilyRestroom";
-import Management from "components/Icons/Management";
-import PlayArea from "components/Icons/PlayArea";
-import Restroom from "components/Icons/Restroom";
-import Security from "components/Icons/Security";
+import ATM from "../Icons/ATM";
+import DogPoopStation from "../Icons/DogPoopStation";
+import Elevator from "../Icons/Elevator";
+import FamilyRestroom from "../Icons/FamilyRestroom";
+import Management from "../Icons/Management";
+import PlayArea from "../Icons/PlayArea";
+import Restroom from "../Icons/Restroom";
+import Security from "../Icons/Security";
 
 const Names = ['atm', 'dog-poop-station', 'elevator', 'family-restroom', 'management', 'playarea', 'restroom', 'security'] as const;
 
@@ -79,7 +79,7 @@ const UIComponent = ({
     reset,
     clearRoute,
     handleAmenityClick,
-    mode,
+    role,
 }: IFloorSelectorProps & {
     amenitiesList: IAmenitiesInteractiveList[],
     zoomIn?: MouseEventHandler<HTMLDivElement>,
@@ -87,7 +87,7 @@ const UIComponent = ({
     reset?: () => void,
     clearRoute?: MouseEventHandler<HTMLDivElement>,
     handleAmenityClick: (type: string) => void,
-    mode?: TMapMode,
+    role?: TRoles,
 }
 ) => {
     const handleResetClick: MouseEventHandler = (e) => {
@@ -111,7 +111,7 @@ const UIComponent = ({
                     </div>
                 </div>
                 <div id={styles['mapit2_loader']} className={styles['hide']}>Loading map, please wait...</div>
-                    {mode !== 'edit' &&
+                    {role !== 'PORTAL' &&
                         <div className={`${styles.amenities}`} style={{ display: 'block' }}>
                             {amenitiesList.map((amenity, index) => (
                                 <div key={`amenity-${amenity.name}-${index}`} className={`${styles.amenity}`} style={{ backgroundColor: '#000000' }} onClick={() => handleAmenityClick(amenity.type)}>

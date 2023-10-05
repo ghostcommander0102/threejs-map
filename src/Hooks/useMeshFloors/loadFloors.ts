@@ -1,19 +1,17 @@
 import {getMeshParams} from "./getMeshParams";
 // import {SVGResult} from "three/examples/jsm/loaders/SVGLoader";
 import { SVGResult } from "three-stdlib";
-import {IConfig, IFloorData, IMeshValues, TMapMode} from "../../types";
-import {allIndexedMapObjects, allIndexedRetailers, allNodesFloor, pathFinderGraph} from "../../globals";
+import {IConfig, IFloorData, IMeshValues, TMapMode, TRoles} from "src/types";
+import {allIndexedMapObjects, allIndexedRetailers, allNodesFloor, pathFinderGraph} from "src/globals";
 import {getMaterialAndGeometry} from "./getMaterialAndGeometry";
 import {Raycaster} from "three";
-import {assign_route_nodes_to_stores, linkFloorEscalators} from "helpers/route.helpers";
+import {assign_route_nodes_to_stores, linkFloorEscalators} from "src/helpers/route.helpers";
 
 // TODO: get rid of this global variable
 let node_count = 0;
 
-export function loadFloors(floors:IFloorData[], config:IConfig, results:SVGResult[], mode?: TMapMode) {
+export function loadFloors(floors:IFloorData[], config:IConfig, results:SVGResult[], role?: TRoles) {
     const GeometriesAndMaterials: Array<IMeshValues[]> = [];
-    // let floor = floors[floors_loaded];
-    // let floor_index = floors_loaded;
     const escalator_nodes: string[] = [];
     results.forEach((result, floor_index) => {
         if (result.paths && result.paths.length) {
@@ -63,11 +61,11 @@ export function loadFloors(floors:IFloorData[], config:IConfig, results:SVGResul
                         allIndexedMapObjects,
                         allIndexedRetailers,
                         path,
-                        mode
+                        role
                     );
 
                     if (layer_name.startsWith('kiosk-')) {
-                        if (mode === 'view') {
+                        if (role === 'PORTAL') {
                             meshParams.mesh.visible = false;
                             //@ts-ignore
                             meshParams.mesh.material.visible = false;

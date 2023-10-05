@@ -1,8 +1,8 @@
-import {IExtMesh, IFloorData, IMeshParams, TMapMode} from "../../types";
+import {IConfig, IExtMesh, IFloorData, IJsonConfig, IMeshParams, TMapMode} from "../../types";
 import {Map} from "./Map";
 import React, {MouseEventHandler, useCallback, useEffect, useRef, useState} from "react";
 import {Group, Mesh, PerspectiveCamera, Vector3} from "three";
-import {ThreeEvent, useThree} from "@react-three/fiber";
+import {ThreeEvent, useFrame, useThree} from "@react-three/fiber";
 import {get_camera_focus_object} from "../../helpers/camera.helpers";
 import {MapControls} from "@react-three/drei";
 import {create_route, make_amenity_route} from "../../helpers/route.helpers";
@@ -25,19 +25,24 @@ interface IFloorsMapProps {
     handleChangeFloor: (index: number) => MouseEventHandler<HTMLDivElement>,
     escalatorNodes: string[];
     zoom: IZoomData | null;
-    mode?: TMapMode;
+    handleCameraLength?: (length: number) => void;
+    config: IConfig;
 }
 
 
 export const FloorsMap = (params:IFloorsMapProps) => {
-    const { meshFloors, currentFloorIndex, currKioskObj, routeTargetId, amenityTargetType, handleChangeFloor, escalatorNodes, zoom, mode } = params;
+    const { meshFloors, currentFloorIndex, currKioskObj, routeTargetId, amenityTargetType, handleChangeFloor, escalatorNodes, zoom, handleCameraLength, config } = params;
     const { floors } = meshFloors;
 
     const groupRef = useRef<Group>(null);
     const [ routeTubes, setRouteTubes ] = useState<Mesh[]>([]);
     const mapControlRef = useRef<any>(null);
     const { camera, scene } = useThree();
-    const cameraFocus = useRef<{ position:Vector3, target:Vector3, animationStartTime:number, cameraTime:number, targetTime:number } | null>(null);
+    const cameraFocus = useRef<{
+        position:Vector3, target:Vector3,
+        fromPosition:Vector3, fromTarget:Vector3,
+        animationStartTime:number, duration:number } | null>(null);
+    // const cameraFocus = useRef<{ position:Vector3, target:Vector3, animationStartTime:number, cameraTime:number, targetTime:number } | null>(null);
 
     const style = meshFloors.config.STYLE;
     const accentColor = meshFloors.config.ACCENT_COLOR;
@@ -45,7 +50,7 @@ export const FloorsMap = (params:IFloorsMapProps) => {
     const from = (currKioskObj as IExtMesh).object_id;
 
     useEffect(() => {
-        if (!amenityTargetType || mode === 'edit') {
+        if (!amenityTargetType || config.ROLE === 'PORTAL') {
             setRouteTubes([]);
             return;
         }
@@ -54,8 +59,15 @@ export const FloorsMap = (params:IFloorsMapProps) => {
     }, [amenityTargetType, scene, pathFinderGraph, floors, escalatorNodes, style, from])
 
     useEffect(() => {
-        if (!from || !routeTargetId || mode === 'edit') {
-            setRouteTubes([]);
+        if (!from || !routeTargetId || config.ROLE === 'PORTAL') {
+            if (config.ROLE === 'PORTAL' && routeTargetId) {
+                const targetMesh = scene.getObjectByProperty('object_id', routeTargetId);
+                if (targetMesh) {
+                    setRouteTubes([targetMesh as IExtMesh])
+                }
+            } else {
+                setRouteTubes([]);
+            }
             return;
         }
         if (!amenityTargetType) {
@@ -88,7 +100,6 @@ export const FloorsMap = (params:IFloorsMapProps) => {
 
     const selectedFloorMeshParams = meshFloors.meshParams[currentFloorIndex];
     useEffect(() => {
-
         if (!(camera instanceof PerspectiveCamera)) {
             console.error('Camera is not a PerspectiveCamera');
             return;
@@ -111,29 +122,28 @@ export const FloorsMap = (params:IFloorsMapProps) => {
             meshes = selectedFloorMeshParams.map(item => item.mesh);
         }
 
-        const cameraSpeed = 0.1; // per second
-        const targetSpeed = 0.1;
-        const focus = get_camera_focus_object(meshes, camera.fov, camera.aspect, mode === 'edit'? '2D' : style);
-        const distance = mapControlRef.current.object.position.distanceTo(focus.position);
-        const targetDistance = mapControlRef.current.target.distanceTo(focus.target);
+        const focus = get_camera_focus_object(meshes, camera.fov, camera.aspect, config.ROLE === 'PORTAL'? '2D' : style);
+        const cameraDistance = Math.min(
+            config.CAMERA.maxDistance,
+            Math.max(
+                config.CAMERA.minDistance,
+                focus.position.distanceTo(focus.target)
+            )
+        );
+        focus.position.sub(focus.target).setLength(cameraDistance).add(focus.target);
+
         cameraFocus.current = {
             ...focus,
+            fromPosition: mapControlRef.current.object.position.clone(),
+            fromTarget: mapControlRef.current.target.clone(),
             animationStartTime: performance.now(),
-            cameraTime: targetDistance/cameraSpeed/1000, // how long it takes to move camera to get to new position
-            targetTime: targetDistance/targetSpeed/1000, // how long it takes to move camera to get to new position
+            duration: config.CAMERA.animSpeed, // how long it takes to move camera to get to new position
         };
-        // console.log({focus, meshes, camera});
-
-        mapControlRef.current.target.copy(focus.target);
-        mapControlRef.current.object.position.copy(focus.position);
-        mapControlRef.current.object.lookAt(focus.target);
-        mapControlRef.current.object.updateProjectionMatrix();
-
 
         return () => {
             cameraFocus.current = null;
         };
-    }, [ routeTubes, selectedFloorMeshParams, currentFloorIndex, style, camera, routeTargetId ]);
+    }, [routeTubes, selectedFloorMeshParams, currentFloorIndex, style, camera, routeTargetId, config.ROLE, config.CAMERA.maxDistance, config.CAMERA.minDistance, config.CAMERA.animSpeed]);
 
     useEffect(() => {
         if (zoom?.direction && mapControlRef.current) {
@@ -151,38 +161,39 @@ export const FloorsMap = (params:IFloorsMapProps) => {
     }, [zoom])
 
     const onCameraMove = useCallback((e: any) => {
-        // console.warn('onCameraMove', e);
-        // debugger
-        cameraFocus.current = null;
-    }, [])
+        if (handleCameraLength) {
+            const vector = new Vector3();
+            vector.copy(e.target.object.position);
+            vector.sub(mapControlRef.current.target);
+            handleCameraLength(vector.length());
+        }
+    }, [handleCameraLength])
 
-    // useFrame(() => {
-    //     if (cameraFocus.current) {
-    //         console.log('animate camera')
-    //         const focus = cameraFocus.current;
-    //         const animationTime = performance.now() - focus.animationStartTime;
-    //         const cameraProgress = Math.min(1, animationTime / focus.cameraTime);
-    //         const targetProgress = Math.min(1, animationTime / focus.targetTime);
-    //         console.log({cameraProgress, targetProgress, animationTime, focus});
-    //
-    //         mapControlRef.current.target.lerp(focus.target, targetProgress);
-    //         mapControlRef.current.object.position.lerp(focus.position, cameraProgress);
-    //         mapControlRef.current.object.lookAt(focus.target);
-    //         mapControlRef.current.object.updateProjectionMatrix();
-    //
-    //         if (cameraProgress === 1 && targetProgress === 1) {
-    //             cameraFocus.current = null;
-    //         }
-    //     }
-    // })
+    useFrame(() => {
+        if (cameraFocus.current?.duration && cameraFocus.current?.duration > 0) {
+            const focus = cameraFocus.current;
+            const animationTime = (performance.now() - focus.animationStartTime)/1000;
+
+            const animationProgress = Math.min(1, animationTime / focus?.duration);
+            mapControlRef.current.object.position.lerpVectors(focus.fromPosition, focus.position, animationProgress);
+            mapControlRef.current.target.lerpVectors(focus?.fromTarget, focus.target, animationProgress);
+
+            mapControlRef.current.object.updateProjectionMatrix();
+            if (animationProgress >= 1) {
+                cameraFocus.current = null;
+            }
+        }
+    })
 
     return (<group rotation={[Math.PI / 2, 0, 0]} ref={groupRef}>
         <>
             <MapControls
-
+                makeDefault
                 onChange={onCameraMove}
                 ref={mapControlRef}
                 maxPolarAngle={Math.PI / 2}
+                minDistance={config.CAMERA.minDistance}
+                maxDistance={config.CAMERA.maxDistance}
                 />
 
             {floors && floors.map(( value: IFloorData, index: number) => (
@@ -194,13 +205,12 @@ export const FloorsMap = (params:IFloorsMapProps) => {
                     activeObjectId={params.activeObjectId}
                     hoverObjectId={params.hoverObjectId}
                     meshFloors={meshFloors}
-                    routeTube={routeTubes && routeTubes[index]}
+                    routeTube={config.ROLE !== 'PORTAL'? routeTubes && routeTubes[index] : undefined}
                     onPointerEnter={params.onPointerEnter}
                     onPointerLeave={params.onPointerLeave}
                     onPointerMove={params.onPointerMove}
                     onClick={params.onClick}
                     handleChangeFloor={handleChangeFloor}
-                    mode={mode}
                 />
             ))}
         </>

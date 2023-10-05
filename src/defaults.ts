@@ -24,6 +24,11 @@ export const mapit2DefaultVars: Partial<IJsonConfig> = {
     OVERLAY_OPACITY: '0.7',
     // AMENITIES_NAV_BG_COLOR: "000000",
     // AMENITIES_NAV_ICON_COLOR: "FFFFFF"
+    CAMERA: {
+        minDistance: 400,
+        maxDistance: 3500,
+        animSpeed: 0.2,
+    }
 }
 
 export const defaultVars: IJsonConfig = {
@@ -54,4 +59,9 @@ export const defaultVars: IJsonConfig = {
     DEFAULT_CAMERA_POSITION: null, // custom default camera position
     DEFAULT_CONTROLS_TARGET: null, // custom default controls target
     DEFAULT_SELECTED_STORE: null,
+    CAMERA: {
+        minDistance: 400,
+        maxDistance: 3500,
+        animSpeed: 0.2,
+    }
 };

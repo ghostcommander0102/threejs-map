@@ -1,4 +1,4 @@
-import { IFloorSelectorProps } from "types";
+import { IFloorSelectorProps } from "../../types";
 import styles from '../../MapBox.module.css';
 
 type TFloorButtonProps = {

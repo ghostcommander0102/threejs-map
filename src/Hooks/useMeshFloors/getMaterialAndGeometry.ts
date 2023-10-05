@@ -3,7 +3,7 @@ import {getWallShape} from "./getWallShape";
 // import {mergeGeometries} from "three/examples/jsm/utils/BufferGeometryUtils";
 import { mergeBufferGeometries as mergeGeometries } from "three-stdlib";
 import {allMapObjects} from "../../globals";
-import {IConfig, IExtMesh, IMeshValues, TMapMode} from "../../types";
+import {IConfig, IExtMesh, IMeshValues, TMapMode, TRoles} from "../../types";
 import {hex_to_color} from "../../helpers/misc";
 
 import {IRetailer, MapObj} from "../../mapitApiTypes";
@@ -168,7 +168,7 @@ export const getGeometry = (
     return geometry;
 }
 
-export const getMaterialAndGeometry = (config: IConfig, mesh_type: MeshType, layer_name: string, layer_color: Color | string, mesh_transparent: boolean, mesh_visible: boolean, z_index: number, extrude: number, line_thickness: number, floors: any, floor_index: number, allIndexedMapObjects: Record<string, MapObj>, allIndexedRetailers: Record<string, IRetailer>, path: any, mode?: TMapMode): IMeshValues => {
+export const getMaterialAndGeometry = (config: IConfig, mesh_type: MeshType, layer_name: string, layer_color: Color | string, mesh_transparent: boolean, mesh_visible: boolean, z_index: number, extrude: number, line_thickness: number, floors: any, floor_index: number, allIndexedMapObjects: Record<string, MapObj>, allIndexedRetailers: Record<string, IRetailer>, path: any, role?: TRoles): IMeshValues => {
     
     const material = getMaterial(
         config,
@@ -233,20 +233,23 @@ export const getMaterialAndGeometry = (config: IConfig, mesh_type: MeshType, lay
             }*/
         }
 
-        if (config.ROLE == 'PORTAL') {
+        if (config.ROLE === 'PORTAL') {
             allMapObjects.push(layer_name);
         }
         if (
-            (config.ROLE == 'PORTAL') ||
-            (config.ROLE != 'PORTAL' && mesh_type == 'kiosk') ||
-            (config.ROLE != 'PORTAL' && config.ROLE != 'PORTAL_KIOSK' && allIndexedMapObjects[layer_name] && allIndexedMapObjects[layer_name].obj_type == 'retailer' && allIndexedMapObjects[layer_name].retailer_id != null) ||
-            (config.ROLE != 'PORTAL' && config.ROLE != 'PORTAL_KIOSK' && allIndexedMapObjects[layer_name] && allIndexedMapObjects[layer_name].layer_type == 'amenity' && allIndexedMapObjects[layer_name].value != '') ||
-            (mode === 'edit' && (allIndexedMapObjects[layer_name]) && (allIndexedMapObjects[layer_name].obj_type === 'special' || allIndexedMapObjects[layer_name].obj_type === 'custom')) ||
-            (mode === 'edit' && ['store', 'kiosk', 'amenity'].includes(mesh.mesh_type?? ''))
+            (config.ROLE !== 'PORTAL' && mesh_type == 'kiosk') ||
+            (config.ROLE !== 'PORTAL' && config.ROLE !== 'PORTAL_KIOSK' && allIndexedMapObjects[layer_name] && allIndexedMapObjects[layer_name].obj_type == 'retailer' && allIndexedMapObjects[layer_name].retailer_id != null) ||
+            (config.ROLE !== 'PORTAL' && config.ROLE != 'PORTAL_KIOSK' && allIndexedMapObjects[layer_name] && allIndexedMapObjects[layer_name].layer_type == 'amenity' && allIndexedMapObjects[layer_name].value != '') ||
+            (config.ROLE === 'PORTAL' && (allIndexedMapObjects[layer_name]) && (allIndexedMapObjects[layer_name].obj_type === 'special' || allIndexedMapObjects[layer_name].obj_type === 'custom')) ||
+            (config.ROLE === 'PORTAL' && ['store', 'kiosk', 'amenity'].includes(mesh.mesh_type?? ''))
         ) {
             // if (interactiveMesh) {
             floors[floor_index].interactiveObjs.push(mesh);
             // }
+        } else if (
+            (config.ROLE === 'PORTAL')
+        ) {
+            floors[floor_index].interactiveObjs.push(mesh);
         }
     }
 

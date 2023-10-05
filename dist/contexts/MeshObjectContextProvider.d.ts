@@ -1,5 +1,5 @@
 /// <reference types="react" />
-import { IExtMesh } from "types";
+import { IExtMesh } from "src/types";
 type TMeshObjectContext = {
     MeshObject: IExtMesh[] | null;
     SetMeshObject: React.Dispatch<React.SetStateAction<IExtMesh[] | null>>;

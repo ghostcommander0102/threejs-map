@@ -1,20 +1,21 @@
 import React, {MouseEventHandler, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {Canvas, ThreeEvent, useThree} from "@react-three/fiber";
-import useMeshFloors, { textLogoNamePrefix } from "Hooks/useMeshFloors";
+import useMeshFloors, { textLogoNamePrefix } from "../../Hooks/useMeshFloors";
 import {SceneProperties} from "./SceneProperties";
 import {CameraProperties} from "./CameraProperties";
 import {Mesh, Object3D} from "three";
-import {IAmenitiesInteractiveList, IExtMesh, IJsonConfig, IMeshParams, TMapMode} from "types";
+import {IAmenitiesInteractiveList, IExtMesh, IJsonConfig, IMeshParams, TMapMode} from "src/types";
 import {FloorsMap} from "./FloorsMap";
 import {useMapit2Data} from "../../useMapit2Data";
 import {MapIt2Response, MapObj} from "../../mapitApiTypes";
 import { Stats } from '@react-three/drei';
-import UIComponent from "components/UIComponent";
+import UIComponent from "../../components/UIComponent";
 import {MapCenterMarker} from "./MapCenterMarker";
-import { delete_route_path } from "helpers/route.helpers";
-import { useMeshObjectContext } from "contexts/MeshObjectContextProvider";
-import MapboxForm from "components/MapboxForm/MapboxForm";
+import { delete_route_path } from "src/helpers/route.helpers";
+import { useMeshObjectContext } from "src/contexts/MeshObjectContextProvider";
+import MapboxForm from "../../components/MapboxForm/MapboxForm";
 import styles from '../../MapBox.module.css';
+import {Alert} from 'react-bootstrap';
 
 const amenitiesList: IAmenitiesInteractiveList[] = [
     {
@@ -50,13 +51,10 @@ const amenitiesList: IAmenitiesInteractiveList[] = [
 ] 
 
 interface ISceneComponentProps {
-    CENTER_ID?: string;
     mapitData?: MapIt2Response;
-    config?: Partial<IJsonConfig>;
-    stats?: boolean;
+    config: Partial<IJsonConfig>;
     selectedActiveObjectId: string;
     setSelectedActiveObjectId: React.Dispatch<React.SetStateAction<string>>;
-    mode?: TMapMode;
     onMapDataUpdate?: (data: MapObj[]) => void;
 }
 
@@ -70,7 +68,7 @@ export type TFormMapObjData = {
 }
 
 const SceneComponent = (params:ISceneComponentProps) => {
-    const data = useMapit2Data({ mapitData:params.mapitData, CENTER_ID: params.CENTER_ID });
+    const data = useMapit2Data({ mapitData:params.mapitData, CENTER_ID: params.config.CENTER_ID as string });
     const [selectedFloorIndex, setSelectedFloorIndex] = useState<number>(-1);
     const [formMapObjData, setFormMapObjData] = useState<TFormMapObjData[]>([]);
 
@@ -79,13 +77,20 @@ const SceneComponent = (params:ISceneComponentProps) => {
     const [amenityTargetType, setAmenityTargetType] = useState<string>('');
     const [zoom, setZoom] = useState<IZoomData | null>(null);
 
+    const [cameraLength, setCameraLength] = useState<number>(0);
+
+    const statsParentRef = useRef(null);
+
+    const handleCameraLength = useCallback((length: number) => {
+        setCameraLength(length);
+    }, [])
+
     const handleFloorChange = (floorIndex: number): MouseEventHandler<HTMLDivElement> => (e) => {
         setSelectedFloorIndex(floorIndex);
     }
 
-    const { mode } = params;
 
-    const meshFloors = useMeshFloors(data, params.config, mode);
+    const meshFloors = useMeshFloors(data, params.config, params.config.ROLE);
     const mapCenterMarkerRef = useRef(null);
     const labelRef = useRef<HTMLDivElement>(null);
     const [ currentHoveredObject, setCurrentHoveredObject ] = useState<Object3D | null>(null);
@@ -152,7 +157,7 @@ const SceneComponent = (params:ISceneComponentProps) => {
                 currKioskFloorIndex = currKioskMeshParams.floor_index;
             }
         } else {
-            if (config?.ROLE === 'WEBSITE') {
+            if (config.ROLE === 'WEBSITE') {
                 kioskError = "This Kiosk is not assigned in MAP, so routes won't work. Please assign the Kiosk from Edit Map first.";
             }
 
@@ -170,15 +175,23 @@ const SceneComponent = (params:ISceneComponentProps) => {
 
     useEffect(() => {
         const currKioskLogo = currKioskObj? meshFloors.storeLogos.flat().find(storeLogo => storeLogo.storeLogo.object_id === 'custom-layer-' + (currKioskObj as IExtMesh).object_id)?.storeLogo : null;
-        if (currKioskLogo && mode !== 'edit') {
-            currKioskLogo.userData.htmlContent = <MapCenterMarker />
+        if (currKioskLogo && config?.ROLE !== 'PORTAL' && config) {
+            const koef = cameraLength/(config.CAMERA.maxDistance - config.CAMERA.minDistance);
+            currKioskLogo.userData.htmlContent = <MapCenterMarker koef={1-koef} />
+            currKioskLogo.position.z = -(koef*80);
+            meshFloors.storeLogos.flat().map(storeLogo => {
+                if (storeLogo.storeLogo.object_id === currKioskLogo.object_id) {
+                    storeLogo.storeLogo.visible = false;
+                }
+                return null;
+            })
         }
         return () => {
             if (currKioskLogo) {
                 currKioskLogo.userData.htmlContent = null;
             }
         }
-    }, [meshFloors, currKioskObj]);
+    }, [meshFloors, currKioskObj, cameraLength]);
 
     useEffect(() => {
         if (meshFloors.meshParams && meshFloors.meshParams.length && selectedActiveObjectId && meshObjectContext?.SetMeshObject) {
@@ -304,23 +317,27 @@ const SceneComponent = (params:ISceneComponentProps) => {
 
     return (
         <>
-            {mode === 'edit' &&
+            {config.ROLE === 'PORTAL' &&
                 <div className={styles['mapbox-admin-form']}>
-                    <MapboxForm
-                        floorIndex={currentFloorIndex}
-                        meshFloors={meshFloors}
-                        config={config}
-                        data={getMapitData()}
-                        setData={handleChangeMapitData}
-                        selectedId={selectedActiveObjectId}
-                        centerId={params.CENTER_ID as string}
-                    />
+                    {!selectedActiveObjectId? 
+                    <Alert variant="info">Select a store to customize.</Alert>
+                    :
+                        <MapboxForm
+                            floorIndex={currentFloorIndex}
+                            meshFloors={meshFloors}
+                            config={config}
+                            data={getMapitData()}
+                            setData={handleChangeMapitData}
+                            selectedId={selectedActiveObjectId}
+                            centerId={params.config.CENTER_ID as string}
+                        />
+                    }
                 </div>
             }
-            <div style={{ position: 'relative' }}>
-                <UIComponent accentColor={config.ACCENT_COLOR.getStyle()} floors={floors} selectedFloorIndex={currentFloorIndex} handleFloorChange={handleFloorChange} amenitiesList={amenitiesList} handleAmenityClick={handleAmenityClick} reset={resetHandle} zoomIn={() => setZoom({ direction: 'in' })} zoomOut={() => setZoom({ direction: 'out' })} mode={mode} />
+            <div ref={statsParentRef} style={{ position: 'relative' }}>
+                <UIComponent accentColor={config.ACCENT_COLOR.getStyle()} floors={floors} selectedFloorIndex={currentFloorIndex} handleFloorChange={handleFloorChange} amenitiesList={amenitiesList} handleAmenityClick={handleAmenityClick} reset={resetHandle} zoomIn={() => setZoom({ direction: 'in' })} zoomOut={() => setZoom({ direction: 'out' })} role={config.ROLE} />
                 <Canvas flat>
-                    {/* {params.stats? <Stats /> : null } */}
+                    {Number(params.config.STATS)? <Stats className={styles.stats} parent={statsParentRef} /> : null }
                     <SceneProperties background={config.MAP_BACKGROUND_COLOR} />
                     <CameraProperties near={1} far={10000} />
                     {/*<axesHelper args={[5000]} />*/}
@@ -345,7 +362,8 @@ const SceneComponent = (params:ISceneComponentProps) => {
                         amenityTargetType={amenityTargetType}
                         escalatorNodes={meshFloors.escalator_nodes}
                         zoom={zoom}
-                        mode={mode}
+                        handleCameraLength={handleCameraLength}
+                        config={config}
                     />
                 </Canvas>
                 <div ref={labelRef}

@@ -2,7 +2,7 @@ import {useEffect, useState} from "react";
 import {MapIt2Response} from "./mapitApiTypes";
 
 interface useMapIt2DataProps {
-    CENTER_ID?: string;
+    CENTER_ID: string;
     mapitData?: MapIt2Response;
 }
 

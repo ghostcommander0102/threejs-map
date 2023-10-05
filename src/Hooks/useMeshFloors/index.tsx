@@ -10,15 +10,14 @@ import { useLoader } from "@react-three/fiber";
 import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import createGraph, { Graph } from "ngraph.graph";
-import data from "demo/data.json";
 import {loadFloors} from "./loadFloors";
-import type {IConfig, IExtMesh, IFloorData, IMeshParams, IMeshValues, TMapMode} from "../../types";
+import type {IConfig, IExtMesh, IFloorData, IMeshParams, IMeshValues, TMapMode, TRoles} from "../../types";
 import {defaultVars, mapit2DefaultVars} from "../../defaults";
 import {allIndexedMapObjects, allIndexedRetailers} from "../../globals";
-import {drawTextLogoStoreOnMap, get_store_name_logo_geo} from "helpers/draw.logo.helpers";
+import {drawTextLogoStoreOnMap, get_store_name_logo_geo} from "src/helpers/draw.logo.helpers";
 import { FontLoader, Font } from "three-stdlib";
 import { IJsonConfig, IMeshParamsTmp} from "../../types";
-import {hex_to_color} from "../../helpers/misc";
+import {hex_to_color} from "src/helpers/misc";
 import {Kiosk, Floor, MapIt2Response, MapObj} from "../../mapitApiTypes";
 import { EventedType } from "ngraph.events";
 import fontData from './optimer_regular.typeface.json'
@@ -141,7 +140,7 @@ const init = (config: IJsonConfig, floors:IFloorData[], response: MapIt2Response
         BOUNDARY_COLOR: hex_to_color(response.settings.BOUNDARY_COLOR ? response.settings.BOUNDARY_COLOR : config.BOUNDARY_COLOR),
         BOUNDARY_THICKNESS: parseFloat(response.settings.BOUNDARY_THICKNESS ? response.settings.BOUNDARY_THICKNESS : config.BOUNDARY_THICKNESS),
         BUILDING_BASE_COLOR: hex_to_color(config.BUILDING_BASE_COLOR),
-        CAMERA: null,
+        CAMERA: config.CAMERA,
         CAMERA_CONTROLS_STATES: response.camera_controls_states[config.DEVICE],
         CENTER_ID: config.CENTER_ID,
         CONTROLS: null,
@@ -204,7 +203,7 @@ const init = (config: IJsonConfig, floors:IFloorData[], response: MapIt2Response
 }*/
 
 
-const useMeshFloors = (data: MapIt2Response|null, jsonConfig?: Partial<IJsonConfig>, mode?: TMapMode): IMeshParamsTmp => {
+const useMeshFloors = (data: MapIt2Response|null, jsonConfig?: Partial<IJsonConfig>, role?: TRoles): IMeshParamsTmp => {
     const [meshParams, setMeshParams] = useState<IMeshValues[][]>([]);
     const [textParams, setTextParams] = useState<Array<{textMesh:IExtMesh}[]>>([]);
     const [storeLogos, setStoreLogos] = useState<{storeLogo: Mesh}[][]>([]);
@@ -292,7 +291,7 @@ const useMeshFloors = (data: MapIt2Response|null, jsonConfig?: Partial<IJsonConf
     useEffect(() => {
         if (!processedConfig || !urls.length || !myFont || !result) return;
 
-        const { GeometriesAndMaterials, graph, escalator_nodes } = loadFloors(floorsData, processedConfig, result, mode);
+        const { GeometriesAndMaterials, graph, escalator_nodes } = loadFloors(floorsData, processedConfig, result, role);
         const TextsAndLogos:Array<{textMesh:IExtMesh}[]> = [];
         allNonIndexedMapObjects.forEach((params) => {
             let values: IMeshValues | undefined;

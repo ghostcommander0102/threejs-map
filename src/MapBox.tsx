@@ -2,19 +2,17 @@ import React, { useEffect, useState } from 'react';
 import styles from './MapBox.module.css';
 import SceneComponent from './components/SceneComponent/SceneComponent';
 import {isMapIt2Response, MapIt2Response, MapObj} from "./mapitApiTypes";
-import {IJsonConfig, TMapMode} from "./types";
-import MeshObjectContextProvider from 'contexts/MeshObjectContextProvider';
+import {IJsonConfig, TMapMode, TRoles} from "./types";
+import MeshObjectContextProvider from 'src/contexts/MeshObjectContextProvider';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 export interface IAppProps {
-    CENTER_ID?: string;
     mapitData?: unknown;
-    config?: Partial<IJsonConfig>;
+    config: Partial<IJsonConfig>;
     stats?: boolean;
-    mode: TMapMode;
 }
 
-function MapBox({ CENTER_ID, mapitData, config, stats, mode }: IAppProps) {
+function MapBox({ mapitData, config }: IAppProps) {
 
   const [selectedActiveObjectId, setSelectedActiveObjectId] = useState<string>('');
   const [mapData, setMapData] = useState<any>(undefined);
@@ -23,19 +21,19 @@ function MapBox({ CENTER_ID, mapitData, config, stats, mode }: IAppProps) {
     setMapData(mapitData);
   }, [mapitData])
 
-  if (!mapitData && !CENTER_ID) {
+  if (!mapitData && !config.CENTER_ID) {
     console.error('Please provide either mapitData or CENTER_ID');
     return null;
   }
-  if (!CENTER_ID && !isMapIt2Response(mapitData)) {
+  if (!config.CENTER_ID && !isMapIt2Response(mapitData)) {
     console.error('mapitData is not a valid MapIt2Response');
     return null;
   }
 
   return (
     <MeshObjectContextProvider>
-      <div className={`${styles['mapbox-component']} ${mode !== 'edit'? styles.view : ''}`}>
-          <SceneComponent setSelectedActiveObjectId={setSelectedActiveObjectId} selectedActiveObjectId={selectedActiveObjectId} stats={stats} mapitData={mapData} CENTER_ID={CENTER_ID} config={config} mode={mode} />
+      <div className={`${styles['mapbox-component']} ${config.ROLE !== 'PORTAL'? styles.view : ''}`}>
+          <SceneComponent setSelectedActiveObjectId={setSelectedActiveObjectId} selectedActiveObjectId={selectedActiveObjectId} mapitData={mapData} config={config} />
         <div className={styles.hide}>
           <div id="map-special-svg-kiosk">
             <svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 443.83 787.21">

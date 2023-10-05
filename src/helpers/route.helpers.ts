@@ -13,7 +13,7 @@ import {
     TubeGeometry,
     Vector3,
 } from "three";
-import {getRenderOrder} from "Hooks/useMeshFloors/getMaterialAndGeometry";
+import {getRenderOrder} from "../Hooks/useMeshFloors/getMaterialAndGeometry";
 import {allNodesFloor} from "../globals";
 import * as ngraphPath from "ngraph.path";
 import {PathFinder} from "ngraph.path";

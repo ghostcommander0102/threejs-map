@@ -1,4 +1,4 @@
-import { IMeshParams, TMapMode } from "../../types";
+import { IConfig, IMeshParams } from "../../types";
 import { MouseEventHandler } from "react";
 import { Mesh } from "three";
 import { ThreeEvent } from "@react-three/fiber";
@@ -19,7 +19,8 @@ interface IFloorsMapProps {
     handleChangeFloor: (index: number) => MouseEventHandler<HTMLDivElement>;
     escalatorNodes: string[];
     zoom: IZoomData | null;
-    mode?: TMapMode;
+    handleCameraLength?: (length: number) => void;
+    config: IConfig;
 }
 export declare const FloorsMap: (params: IFloorsMapProps) => import("react/jsx-runtime").JSX.Element;
 export {};

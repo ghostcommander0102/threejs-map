@@ -1,14 +1,11 @@
 import React from "react";
-import { IJsonConfig, TMapMode } from "types";
+import { IJsonConfig } from "src/types";
 import { MapIt2Response, MapObj } from "../../mapitApiTypes";
 interface ISceneComponentProps {
-    CENTER_ID?: string;
     mapitData?: MapIt2Response;
-    config?: Partial<IJsonConfig>;
-    stats?: boolean;
+    config: Partial<IJsonConfig>;
     selectedActiveObjectId: string;
     setSelectedActiveObjectId: React.Dispatch<React.SetStateAction<string>>;
-    mode?: TMapMode;
     onMapDataUpdate?: (data: MapObj[]) => void;
 }
 export interface IZoomData {

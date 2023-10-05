@@ -1,5 +1,5 @@
-import { MapObj } from "mapitApiTypes";
-import { IConfig, IMeshParamsTmp } from "types";
+import { MapObj } from "src/mapitApiTypes";
+import { IConfig, IMeshParamsTmp } from "src/types";
 interface IMapboxForm {
     floorIndex: number;
     meshFloors: IMeshParamsTmp;

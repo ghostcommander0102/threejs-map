@@ -92,7 +92,7 @@ export interface IJsonConfig {
     STORE_TEXT_COLOR: string;
     WALL_THICKNESS: string;
     CENTER_ID: string | null;
-    ROLE: string;
+    ROLE: TRoles
     DEFAULT_SELECTED_STORE: string | null;
     CAMERA_CONTROLS_STATES: CameraControlsState | null;
     FLOORS: Floor[];
@@ -107,6 +107,11 @@ export interface IJsonConfig {
     STORE_DEFAULT_COLOR: string;
     MAP_BACKGROUND_COLOR: string;
     DEVICE: ConfigDeviceType;
+    CAMERA: {
+        minDistance: number;
+        maxDistance: number;
+        animSpeed: number;
+    }
 }
 
 export interface IConfig {
@@ -122,13 +127,17 @@ export interface IConfig {
     STORE_TEXT_COLOR: Color;
     WALL_THICKNESS: number;
     CENTER_ID: string | null;
-    ROLE: string;
+    ROLE: TRoles;
     DEFAULT_SELECTED_STORE: string | null;
     CAMERA_CONTROLS_STATES: CameraControlsState | null;
     FLOORS: Floor[];
     STYLE: ConfigStyleType;
     BOUNDARY_COLOR: Color;
-    CAMERA: null;
+    CAMERA: {
+        minDistance: number;
+        maxDistance: number;
+        animSpeed: number;
+    }
     DEFAULT_CONTROLS_TARGET: null;
     DEBUG: string | number;
     CONTROLS: null;
@@ -174,3 +183,6 @@ export interface IAmenitiesInteractiveList {
 }
 
 export type TMapMode = 'view' | 'edit';
+
+    export type TRoles = 'WEBSITE' | 'PORTAL' | 'WEBSITE' | 'DISPLAY_APP' | 'WP_SITE' | 'PORTAL_KIOSK' | 'PORTAL_RESPONSIVE';
+

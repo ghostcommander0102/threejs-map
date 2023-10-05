@@ -1,6 +1,6 @@
 import { createContext, useContext, useState } from "react"
 import { Object3D } from "three";
-import { IExtMesh } from "types";
+import { IExtMesh } from "src/types";
 
 
 type TMeshObjectContext = {

@@ -1,17 +1,15 @@
-import { HtmlProps } from "@react-three/drei/web/Html";
-import { useThree } from "@react-three/fiber";
-import { MeshType, getMaterial } from "Hooks/useMeshFloors/getMaterialAndGeometry";
-import { useMeshObjectContext } from "contexts/MeshObjectContextProvider";
-import { getImage, layer_text_logo_position_by_id, processImage } from "helpers/draw.logo.helpers";
-import { getFormatedColor, hex_to_color } from "helpers/misc";
-import { IRetailer, MapObj } from "mapitApiTypes";
+import { MeshType, getMaterial } from "../../Hooks/useMeshFloors/getMaterialAndGeometry";
+import { useMeshObjectContext } from "src/contexts/MeshObjectContextProvider";
+import { getImage, layer_text_logo_position_by_id, processImage } from "src/helpers/draw.logo.helpers";
+import { getFormatedColor, hex_to_color } from "src/helpers/misc";
+import { IRetailer, MapObj } from "src/mapitApiTypes";
 import { MouseEventHandler, SyntheticEvent, useEffect, useRef, useState, useTransition } from "react";
 import { Button, Col, Form, FormControl, FormControlProps, Nav, Row, Tab, Tabs } from "react-bootstrap"
+import { ArrowClockwise } from "react-bootstrap-icons";
 import { DoubleSide, Euler, MeshBasicMaterial, MeshPhongMaterial, Object3D, Vector3 } from "three";
 // import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry";
 import { Geometry, TextGeometry } from "three-stdlib";
-import { IConfig, IExtMesh, IJsonConfig, IMeshParamsTmp } from "types";
-
+import { IConfig, IExtMesh, IJsonConfig, IMeshParamsTmp } from "src/types";
 
 
 interface IMapboxForm {
@@ -35,6 +33,12 @@ const isTRetailerTabsKey = (x: any): x is TRetailerTabsKey => retailerTabs.inclu
 const specialTabs = ['kiosk', 'amenity', ''] as const;
 type TSpecialTabsKey = (typeof specialTabs)[number];
 const isTSpecialTabsKey = (x: any): x is TSpecialTabsKey => specialTabs.includes(x);
+
+const IncDecNames = ['size', 'rotate', 'offsetX', 'offsetY'] as const;
+type TIncDecKey = (typeof IncDecNames)[number]
+type TIncDecInterval = {
+    [Key in TIncDecKey]?: NodeJS.Timeout | null;
+}
 
 const getDefaultMapOjbValues = (centerId: string): MapObj => ({
 	id: '',
@@ -69,6 +73,7 @@ const MapboxForm = (params: IMapboxForm) => {
     const context = useMeshObjectContext();
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
     const [isPending, startTransition] = useTransition();
+    const intervalRefs = useRef<TIncDecInterval>({});
 
     useEffect(() => {
         switch(mainTabKey) {
@@ -431,7 +436,7 @@ const MapboxForm = (params: IMapboxForm) => {
         }
     }, [formData])
 
-    const handleDecrement = (key: 'size' | 'rotate' | 'offsetX' | 'offsetY') => () => {
+    const decrementValue = (key: TIncDecKey) => {
         if (Object.hasOwn(formData, key)) {
             let value = parseInt(formData[key]);
             value -= 1;
@@ -439,11 +444,58 @@ const MapboxForm = (params: IMapboxForm) => {
         }
     }
 
-    const handleIncrement = (key: 'size' | 'rotate' | 'offsetX' | 'offsetY') => () => {
+    const incrementValue = (key: TIncDecKey) => {
         if (Object.hasOwn(formData, key)) {
             let value = parseInt(formData[key]);
             value += 1;
             changeValue(key, value.toString());
+        }
+    }
+
+    const rotateByFixedAngle = (key:TIncDecKey, angle: number) => {
+        if (Object.hasOwn(formData, key)) {
+            let value = parseInt(formData[key]);
+            value += angle;
+            if (value > 360) {
+                value = angle;
+            } else if (value === 360) {
+                value = 0;
+            }
+
+            changeValue(key, value.toString());
+        }
+    }
+
+    const handleRotateByFixedAngle = (key: TIncDecKey, angle: number) => () => {
+        if (intervalRefs.current[key]) return;
+
+        intervalRefs.current[key] = setInterval(() => {
+            rotateByFixedAngle(key, angle);
+        }, 100);
+    } 
+
+    const handleDecrement = (key: 'size' | 'rotate' | 'offsetX' | 'offsetY') => () => {
+        if (intervalRefs.current[key]) return;
+
+        intervalRefs.current[key] = setInterval(() => {
+            decrementValue(key);
+        }, 100);
+    }
+
+    const handleIncrement = (key: 'size' | 'rotate' | 'offsetX' | 'offsetY') => () => {
+        if (intervalRefs.current[key]) return;
+
+        intervalRefs.current[key] = setInterval(() => {
+            incrementValue(key);
+        }, 100);
+    }
+
+    const stopIntervals = () => {
+        let key:TIncDecKey;
+        for (key in intervalRefs.current) {
+            if (intervalRefs.current[key])
+                clearInterval(intervalRefs.current[key] as NodeJS.Timeout);
+                intervalRefs.current[key] = null;
         }
     }
 
@@ -592,21 +644,35 @@ const MapboxForm = (params: IMapboxForm) => {
                         <Form.Label className="mb-0">Size</Form.Label>
                     </Col>
                     <Col sm="8">
-                        <Row>
-                            <Col sm="4" className="d-flex">
-                                <Button onClick={handleDecrement('size')} variant="outline-dark">-</Button>
-                            </Col>
-                            <Col sm="4">
+                        <Row style={{flexDirection: 'row'}}>
+                            <div style={{maxWidth: 50}}>
+                                <Button
+                                    onClick={() => decrementValue('size')}
+                                    onMouseDown={handleDecrement('size')}
+                                    onMouseUp={stopIntervals}
+                                    onMouseLeave={stopIntervals}
+                                    variant="outline-dark"
+                                    style={{paddingLeft: '0.75rem', paddingRight: '0.75rem'}}
+                                >-</Button>
+                            </div>
+                            <div style={{maxWidth: 80, padding: 0}}>
                                 <Form.Control
                                     name="size"
-                                    type="number"
+                                    type="text"
                                     value={formData.size}
                                     onChange={handleChange}
                                 />
-                            </Col>
-                            <Col sm="4" className="d-flex justify-content-end">
-                                <Button onClick={handleIncrement('size')} variant="outline-dark">+</Button>
-                            </Col>
+                            </div>
+                            <div style={{maxWidth: 50}}>
+                                <Button
+                                    onClick={() => incrementValue('size')}
+                                    onMouseDown={handleIncrement('size')}
+                                    onMouseUp={stopIntervals}
+                                    onMouseLeave={stopIntervals}
+                                    variant="outline-dark"
+                                    style={{paddingLeft: '0.75rem', paddingRight: '0.75rem'}}
+                                >+</Button>
+                            </div>
                         </Row>
                     </Col>
                 </Row>
@@ -615,21 +681,47 @@ const MapboxForm = (params: IMapboxForm) => {
                         <Form.Label className="mb-0">Rotate</Form.Label>
                     </Col>
                     <Col sm="8">
-                        <Row>
-                            <Col sm="4" className="d-flex">
-                                <Button onClick={handleDecrement('rotate')} variant="outline-dark">-</Button>
-                            </Col>
-                            <Col sm="4">
+                        <Row style={{flexDirection: 'row'}}>
+                            <div style={{maxWidth: 50}}>
+                                <Button
+                                    onClick={() => decrementValue('rotate')}
+                                    onMouseDown={handleDecrement('rotate')}
+                                    onMouseUp={stopIntervals}
+                                    onMouseLeave={stopIntervals}
+                                    variant="outline-dark"
+                                    style={{paddingLeft: '0.75rem', paddingRight: '0.75rem'}}
+                                >-</Button>
+                            </div>
+                            <div style={{maxWidth: 80, padding: 0}}>
                                 <Form.Control
                                     name="rotate"
                                     type="number"
                                     value={rotation ?? formData.rotate}
                                     onChange={handleChange}
                                 />
-                            </Col>
-                            <Col sm="4" className="d-flex justify-content-end">
-                                <Button onClick={handleIncrement('rotate')} variant="outline-dark">+</Button>
-                            </Col>
+                            </div>
+                            <div style={{maxWidth: 50}}>
+                                <Button
+                                    onClick={() => incrementValue('rotate')}
+                                    onMouseDown={handleIncrement('rotate')}
+                                    onMouseUp={stopIntervals}
+                                    onMouseLeave={stopIntervals}
+                                    variant="outline-dark"
+                                    style={{paddingLeft: '0.75rem', paddingRight: '0.75rem'}}
+                                  >+</Button>
+                            </div>
+                            <div style={{maxWidth: 50, height: 50}}>
+                                <Button
+                                    onClick={() => rotateByFixedAngle('rotate', 45)}
+                                    onMouseDown={handleRotateByFixedAngle('rotate', 45)}
+                                    onMouseUp={stopIntervals}
+                                    onMouseLeave={stopIntervals}
+                                    variant="outline-dark"
+                                    style={{paddingLeft: '0.75rem', paddingRight: '0.75rem'}}
+                                >
+                                    <ArrowClockwise size={'1rem'} />
+                                </Button>
+                            </div>
                         </Row>
                     </Col>
                 </Row>
@@ -638,11 +730,18 @@ const MapboxForm = (params: IMapboxForm) => {
                         <Form.Label className="mb-0">Offset X</Form.Label>
                     </Col>
                     <Col sm="8">
-                        <Row>
-                            <Col sm="4" className="d-flex">
-                                <Button onClick={handleDecrement('offsetX')} variant="outline-dark">-</Button>
-                            </Col>
-                            <Col sm="4">
+                        <Row style={{flexDirection: 'row'}}>
+                            <div style={{maxWidth: 50}}>
+                                <Button
+                                    onClick={() => decrementValue('offsetX')}
+                                    onMouseDown={handleDecrement('offsetX')}
+                                    onMouseUp={stopIntervals}
+                                    onMouseLeave={stopIntervals}
+                                    variant="outline-dark"
+                                    style={{paddingLeft: '0.75rem', paddingRight: '0.75rem'}}
+                                >-</Button>
+                            </div>
+                            <div style={{maxWidth: 80, padding: 0}}>
 
                                 <Form.Control
                                     name="offsetX"
@@ -650,10 +749,17 @@ const MapboxForm = (params: IMapboxForm) => {
                                     value={formData.offsetX}
                                     onChange={handleChange}
                                 />
-                            </Col>
-                            <Col sm="4" className="d-flex justify-content-end">
-                                <Button onClick={handleIncrement('offsetX')} variant="outline-dark">+</Button>
-                            </Col>
+                            </div>
+                            <div style={{maxWidth: 50}}>
+                                <Button
+                                    onClick={() => incrementValue('offsetX')}
+                                    onMouseDown={handleIncrement('offsetX')}
+                                    onMouseUp={stopIntervals}
+                                    onMouseLeave={stopIntervals}
+                                    variant="outline-dark"
+                                    style={{paddingLeft: '0.75rem', paddingRight: '0.75rem'}}
+                                  >+</Button>
+                            </div>
                         </Row>
                     </Col>
                 </Row>
@@ -662,21 +768,35 @@ const MapboxForm = (params: IMapboxForm) => {
                         <Form.Label className="mb-0">Offset Y</Form.Label>
                     </Col>
                     <Col sm="8">
-                        <Row>
-                            <Col sm="4" className="d-flex">
-                                <Button onClick={handleDecrement('offsetY')} variant="outline-dark">-</Button>
-                            </Col>
-                            <Col sm="4">
+                        <Row style={{flexDirection: 'row'}}>
+                            <div style={{maxWidth: 50}}>
+                                <Button
+                                    onClick={() => decrementValue('offsetY')}
+                                    onMouseDown={handleDecrement('offsetY')}
+                                    onMouseUp={stopIntervals}
+                                    onMouseLeave={stopIntervals}
+                                    variant="outline-dark"
+                                    style={{paddingLeft: '0.75rem', paddingRight: '0.75rem'}}
+                                >-</Button>
+                            </div>
+                            <div style={{maxWidth: 80, padding: 0}}>
                                 <Form.Control
                                     name="offsetY"
                                     type="number"
                                     value={formData.offsetY}
                                     onChange={handleChange}
                                 />
-                            </Col>
-                            <Col sm="4" className="d-flex justify-content-end">
-                                <Button onClick={handleIncrement('offsetY')} variant="outline-dark">+</Button>
-                            </Col>
+                            </div>
+                            <div style={{maxWidth: 50}}>
+                                <Button
+                                    onClick={() => incrementValue('offsetY')}
+                                    onMouseDown={handleIncrement('offsetY')}
+                                    onMouseUp={stopIntervals}
+                                    onMouseLeave={stopIntervals}
+                                    variant="outline-dark"
+                                    style={{paddingLeft: '0.75rem', paddingRight: '0.75rem'}}
+                                  >+</Button>
+                            </div>
                         </Row>
                     </Col>
                 </Row>
@@ -710,12 +830,6 @@ const MapboxForm = (params: IMapboxForm) => {
                                         value={formData.transparent}
                                         onChange={handleChange}
                                 ></input>
-                                    {/* <Form.Control
-                                        name="transparent"
-                                        type="checkbox"
-                                        value={formData.transparent}
-                                        onChange={handleChange}
-                                    ></Form.Control> */}
                             </Col>
                             <Col sm="9" className="p-0">
                                 <Form.Label htmlFor="transparent" className="mb-0">Transparent</Form.Label>

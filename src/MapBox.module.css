@@ -1,6 +1,6 @@
 .kioskMarker {
-  width: 15px;
-  height: 30px;
+  width: 25px;
+  height: 40px;
 }
 .kioskMarker svg {
   transform: translate(-50%, -50%);
@@ -270,4 +270,7 @@
 	border-color: transparent #fff #fff transparent;
 }
 
+.stats {
+	position: absolute !important;
+}
 

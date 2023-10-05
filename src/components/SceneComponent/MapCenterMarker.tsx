@@ -1,7 +1,7 @@
 import React, {useEffect} from "react";
 import styles from '../../MapBox.module.css';
 
-export const MapCenterMarker = () => {
+export const MapCenterMarker = ({koef}: {koef: number}) => {
     const kioskElementRef = React.useRef<HTMLDivElement>(null);
 
     // todo figure out better way
@@ -24,6 +24,6 @@ export const MapCenterMarker = () => {
 
     return <>
         <div className={styles['mapCenterMarker']}></div>
-        <div className={styles['kioskMarker']} ref={kioskElementRef}></div>
+        <div className={styles['kioskMarker']} ref={kioskElementRef} style={{width: koef*10+15, height: koef*10+30}}></div>
     </>
 }

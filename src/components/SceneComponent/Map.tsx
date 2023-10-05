@@ -1,4 +1,4 @@
-import {IMeshParams, TMapMode} from "../../types";
+import {IMeshParams, TRoles} from "../../types";
 import {ThreeEvent} from "@react-three/fiber";
 import React, {MouseEventHandler} from "react";
 import {Mesh, MeshLambertMaterial, MeshStandardMaterial, RGB} from "three";
@@ -19,7 +19,6 @@ interface IMapProps {
     onPointerMove?: (e: ThreeEvent<PointerEvent>) => void;
     onClick?: (e: ThreeEvent<MouseEvent>) => void;
     handleChangeFloor: (index: number) => MouseEventHandler<HTMLDivElement>;
-    mode?: TMapMode;
 }
 
 const getDarkerColor = (color: RGB) => {
@@ -34,7 +33,7 @@ const getDarkerColor = (color: RGB) => {
 }
 
 export const Map = (params: IMapProps) => {
-    const {meshFloors, routeTube, floorIndex, activeObjectId, hoverObjectId, visible, handleChangeFloor, mode} = params;
+    const {meshFloors, routeTube, floorIndex, activeObjectId, hoverObjectId, visible, handleChangeFloor} = params;
 
     const { config, meshParams, textParams, storeLogos} = meshFloors;
     const floor = meshFloors.floors[floorIndex];
