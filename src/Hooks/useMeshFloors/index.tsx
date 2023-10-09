@@ -164,7 +164,10 @@ const init = (config: IJsonConfig, floors:IFloorData[], response: MapIt2Response
         WALL_THICKNESS: parseFloat(response.settings.WALL_THICKNESS ? response.settings.WALL_THICKNESS : config.WALL_THICKNESS),
         FLOORS: response.floors,
         AMENITIES: response.amenities,
-        RETAILERS: response.retailers
+        RETAILERS: response.retailers,
+        AMENITIES_NAV_BG_COLOR: hex_to_color(response.settings.AMENITIES_NAV_BG_COLOR),
+        AMENITIES_NAV_ICON_COLOR: hex_to_color(response.settings.AMENITIES_NAV_ICON_COLOR),
+        KIOSK_SIZE: response.settings.KIOSK_SIZE? response.settings.KIOSK_SIZE : config.KIOSK_SIZE,
     };
 
     // AMENITIES_NAV_BG_COLOR: string;

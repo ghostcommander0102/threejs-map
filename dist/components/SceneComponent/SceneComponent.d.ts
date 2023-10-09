@@ -7,6 +7,7 @@ interface ISceneComponentProps {
     selectedActiveObjectId: string;
     setSelectedActiveObjectId: React.Dispatch<React.SetStateAction<string>>;
     onMapDataUpdate?: (data: MapObj[]) => void;
+    onSettingsLoading?: (settings: MapIt2Response) => void;
 }
 export interface IZoomData {
     direction: 'in' | 'out';

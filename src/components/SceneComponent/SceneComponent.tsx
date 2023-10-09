@@ -4,7 +4,7 @@ import useMeshFloors, { textLogoNamePrefix } from "../../Hooks/useMeshFloors";
 import {SceneProperties} from "./SceneProperties";
 import {CameraProperties} from "./CameraProperties";
 import {Mesh, Object3D} from "three";
-import {IAmenitiesInteractiveList, IExtMesh, IJsonConfig, IMeshParams, TMapMode} from "src/types";
+import {IAmenitiesInteractiveList, IExtMesh, IJsonConfig, IMeshParams, TMapMode, TMapSettingsProps} from "src/types";
 import {FloorsMap} from "./FloorsMap";
 import {useMapit2Data} from "../../useMapit2Data";
 import {MapIt2Response, MapObj} from "../../mapitApiTypes";
@@ -56,6 +56,7 @@ interface ISceneComponentProps {
     selectedActiveObjectId: string;
     setSelectedActiveObjectId: React.Dispatch<React.SetStateAction<string>>;
     onMapDataUpdate?: (data: MapObj[]) => void;
+    onSettingsLoading?: (settings: MapIt2Response) => void;
 }
 
 export interface IZoomData {
@@ -99,6 +100,33 @@ const SceneComponent = (params:ISceneComponentProps) => {
     const config = meshFloors.config;
     const floors = meshFloors.floors;
     const meshParams = meshFloors.meshParams;
+
+    useEffect(() => {
+        if (data && meshFloors.config && params.onSettingsLoading) {
+            params.onSettingsLoading(
+                {
+                    ...data,
+                    settings: {
+                        ...data.settings,
+                        ACCENT_COLOR: meshFloors.config.ACCENT_COLOR.getHexString(),
+                        AMENITIES_NAV_BG_COLOR: meshFloors.config.AMENITIES_NAV_BG_COLOR.getHexString(),
+                        AMENITIES_NAV_ICON_COLOR: meshFloors.config.AMENITIES_NAV_ICON_COLOR.getHexString(),
+                        BASE_COLOR: meshFloors.config.BASE_COLOR.getHexString(),
+                        BIG_STORE_DEFAULT_COLOR: meshFloors.config.BIG_STORE_DEFAULT_COLOR.getHexString(),
+                        BOUNDARY_COLOR: meshFloors.config.BOUNDARY_COLOR.getHexString(),
+                        BOUNDARY_THICKNESS: meshFloors.config.BOUNDARY_THICKNESS.toString(),
+                        MAP_BACKGROUND_COLOR: meshFloors.config.MAP_BACKGROUND_COLOR.getHexString(),
+                        OVERLAY_COLOR: meshFloors.config.OVERLAY_COLOR.getHexString(),
+                        OVERLAY_OPACITY: meshFloors.config.OVERLAY_OPACITY.toString(),
+                        STORE_DEFAULT_COLOR: meshFloors.config.STORE_DEFAULT_COLOR.getHexString(),
+                        STORE_TEXT_COLOR: meshFloors.config.STORE_TEXT_COLOR.getHexString(),
+                        WALL_COLOR: meshFloors.config.WALL_COLOR.getHexString(),
+                        WALL_THICKNESS: meshFloors.config.WALL_THICKNESS.toString(),
+                        KIOSK_SIZE: meshFloors.config.KIOSK_SIZE? meshFloors.config.KIOSK_SIZE : '15',
+                    }
+                });
+        }
+    }, [data, meshFloors])
 
 
     // if selectedActiveObjectId is not -1, then it is set to the DEFAULT_SELECTED_STORE
@@ -177,7 +205,7 @@ const SceneComponent = (params:ISceneComponentProps) => {
         const currKioskLogo = currKioskObj? meshFloors.storeLogos.flat().find(storeLogo => storeLogo.storeLogo.object_id === 'custom-layer-' + (currKioskObj as IExtMesh).object_id)?.storeLogo : null;
         if (currKioskLogo && config?.ROLE !== 'PORTAL' && config) {
             const koef = cameraLength/(config.CAMERA.maxDistance - config.CAMERA.minDistance);
-            currKioskLogo.userData.htmlContent = <MapCenterMarker koef={1-koef} />
+            currKioskLogo.userData.htmlContent = <MapCenterMarker size={Number(config.KIOSK_SIZE)} koef={1-koef} />
             currKioskLogo.position.z = -(koef*80);
             meshFloors.storeLogos.flat().map(storeLogo => {
                 if (storeLogo.storeLogo.object_id === currKioskLogo.object_id) {

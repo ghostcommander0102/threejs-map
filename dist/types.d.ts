@@ -112,6 +112,7 @@ export interface IJsonConfig {
         maxDistance: number;
         animSpeed: number;
     };
+    KIOSK_SIZE?: string;
 }
 export interface IConfig {
     BUILDING_BASE_COLOR: Color;
@@ -149,6 +150,9 @@ export interface IConfig {
     DEVICE: ConfigDeviceType;
     RETAILERS: IRetailer[];
     AMENITIES: Record<string, Amenity>;
+    AMENITIES_NAV_BG_COLOR: Color;
+    AMENITIES_NAV_ICON_COLOR: Color;
+    KIOSK_SIZE?: string;
 }
 export type ConfigStyleType = "2D" | "3D";
 export type ConfigDeviceType = "display_app" | "desktop" | "tablet" | "mobile";
@@ -176,3 +180,20 @@ export interface IAmenitiesInteractiveList {
 }
 export type TMapMode = 'view' | 'edit';
 export type TRoles = 'WEBSITE' | 'PORTAL' | 'WEBSITE' | 'DISPLAY_APP' | 'WP_SITE' | 'PORTAL_KIOSK' | 'PORTAL_RESPONSIVE';
+export type TMapSettingsProps = {
+    MAP_BACKGROUND_COLOR: string;
+    ACCENT_COLOR: string;
+    STORE_DEFAULT_COLOR: string;
+    BIG_STORE_DEFAULT_COLOR: string;
+    WALL_THICKNESS: string;
+    WALL_COLOR: string;
+    BOUNDARY_THICKNESS: string;
+    BOUNDARY_COLOR: string;
+    BASE_COLOR: string;
+    STORE_TEXT_COLOR: string;
+    OVERLAY_COLOR: string;
+    OVERLAY_OPACITY: string;
+    AMENITIES_NAV_BG_COLOR: string;
+    AMENITIES_NAV_ICON_COLOR: string;
+    KIOSK_SIZE: string;
+};

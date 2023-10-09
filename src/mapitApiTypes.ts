@@ -76,6 +76,7 @@ export type Settings = {
     OVERLAY_OPACITY: string;
     AMENITIES_NAV_BG_COLOR: string;
     AMENITIES_NAV_ICON_COLOR: string;
+    KIOSK_SIZE: string;
 };
 
 export type Kiosk = {

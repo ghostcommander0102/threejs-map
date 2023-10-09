@@ -63,5 +63,6 @@ export const defaultVars: IJsonConfig = {
         minDistance: 400,
         maxDistance: 3500,
         animSpeed: 0.2,
-    }
+    },
+    KIOSK_SIZE: '15',
 };
