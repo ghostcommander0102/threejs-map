@@ -362,7 +362,7 @@ const SceneComponent = (params:ISceneComponentProps) => {
                     }
                 </div>
             }
-            <div ref={statsParentRef} style={{ position: 'relative' }}>
+            <div ref={statsParentRef} style={{ position: 'relative', width: '100%' }}>
                 <UIComponent accentColor={config.ACCENT_COLOR.getStyle()} floors={floors} selectedFloorIndex={currentFloorIndex} handleFloorChange={handleFloorChange} amenitiesList={amenitiesList} handleAmenityClick={handleAmenityClick} reset={resetHandle} zoomIn={() => setZoom({ direction: 'in' })} zoomOut={() => setZoom({ direction: 'out' })} role={config.ROLE} />
                 <Canvas flat>
                     {Number(params.config.STATS)? <Stats className={styles.stats} parent={statsParentRef} /> : null }

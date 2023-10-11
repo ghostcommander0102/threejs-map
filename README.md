@@ -10,4 +10,4 @@ For push/update package
 
 For develop
 1. npm i
-2. npm storybook
+2. npm run storybook
