@@ -197,3 +197,17 @@ export type TMapSettingsProps = {
     AMENITIES_NAV_ICON_COLOR: string;
     KIOSK_SIZE: string;
 };
+export type TMapBoxConfig = {
+    KIOSK: string;
+    CENTER_ID: string;
+    CAMERA: {
+        minDistance: number;
+        maxDistance: number;
+        animSpeed: number;
+    };
+    STATS: '1' | '0';
+    DEBUG: '1' | '0';
+    ROLE: TRoles;
+    STYLE: '2D' | '3D';
+    KIOSK_SIZE?: string;
+};
