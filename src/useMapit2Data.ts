@@ -83,6 +83,7 @@ export function useMapit2Data({ CENTER_ID, mapitData, APIUri }: useMapIt2DataPro
                     responseData.kiosks = [];
                     responseData.amenities = {...demoData.amenities};
 
+                    console.warn('DATA', responseData);
                     setData({...responseData as MapIt2Response})
                 }
             })

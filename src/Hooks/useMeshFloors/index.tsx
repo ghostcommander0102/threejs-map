@@ -242,7 +242,7 @@ const useMeshFloors = (data: MapIt2Response|null, jsonConfig?: Partial<IJsonConf
         if (!data) return;
 
 
-        // console.log('useMeshFloors[data]', {data})
+        console.log('useMeshFloors[data]', {data})
 
         const processedConfig = init(jsonConfig ? {...config, ...jsonConfig} : config, floorsData, data as MapIt2Response);
         const values: string[] = [];
