@@ -198,7 +198,7 @@ const SceneComponent = (params:ISceneComponentProps) => {
     // }, [config, meshParams]);
 
     const resetHandle = () => {
-        // setSelectedFloorIndex(currKioskFloorIndex);
+        setSelectedFloorIndex(0);//currKioskFloorIndex);
         setSelectedActiveObjectId('');
     }
 
@@ -380,7 +380,7 @@ const SceneComponent = (params:ISceneComponentProps) => {
                         meshFloors={meshFloorsChecked}
                         activeObjectId={activeObjectId}
                         hoverObjectId={hoverObjectId}
-                        // currKioskObj={currKioskObj}
+                        //currKioskObj={currKioskObj}
                         routeTargetId={activeObjectId}
                         currentFloorIndex={currentFloorIndex}
                         onPointerEnter={onPointerEnter}

@@ -47,56 +47,56 @@ export const FloorsMap = (params:IFloorsMapProps) => {
     const style = meshFloors.config.STYLE;
     const accentColor = meshFloors.config.ACCENT_COLOR;
     const pathFinderGraph = meshFloors.pathFinderGraph;
-    const from = (currKioskObj as IExtMesh).object_id;
+    //const from = (currKioskObj as IExtMesh).object_id;
 
-    useEffect(() => {
-        if (!amenityTargetType || config.ROLE === 'PORTAL') {
-            setRouteTubes([]);
-            return;
-        }
-        const route = make_amenity_route(from?? '', amenityTargetType, scene, allIndexedMapObjects, pathFinderGraph, floors, escalatorNodes, style);
-        setRouteTubes(route);
-    }, [amenityTargetType, scene, pathFinderGraph, floors, escalatorNodes, style, from])
+    // useEffect(() => {
+    //     if (!amenityTargetType || config.ROLE === 'PORTAL') {
+    //         setRouteTubes([]);
+    //         return;
+    //     }
+    //     const route = make_amenity_route(from?? '', amenityTargetType, scene, allIndexedMapObjects, pathFinderGraph, floors, escalatorNodes, style);
+    //     setRouteTubes(route);
+    // }, [amenityTargetType, scene, pathFinderGraph, floors, escalatorNodes, style, from])
 
-    useEffect(() => {
-        if (!from || !routeTargetId || config.ROLE === 'PORTAL') {
-            if (config.ROLE === 'PORTAL' && routeTargetId) {
-                const targetMesh = scene.getObjectByProperty('object_id', routeTargetId);
-                if (targetMesh) {
-                    setRouteTubes([targetMesh as IExtMesh])
-                }
-            } else {
-                setRouteTubes([]);
-            }
-            return;
-        }
-        if (!amenityTargetType) {
-            floors.forEach(floor => {
-                floor.escalatorMeshes = [];
-            });
-        }
-
-
-        console.log('Make route from %s to %s', from, routeTargetId, pathFinderGraph);
-
-        /* MAKE ROUTE PATH */
-
-        const route = create_route(from, routeTargetId, scene, floors, meshFloors.escalator_nodes, pathFinderGraph, style);
-
-        // TODO: activate object (moved out of create_route function)
-        // makeObjectActive(to_mesh_object_id, accentColor, scene);
-
-        // TODO: focus object (moved out of create_route function)
-        // if (!routePaths.length) {
-        //     let obj = scene.getObjectByProperty('object_id', to_mesh_object_id);
-        //     const {position, target} =get_camera_focus_object([obj], camera.fov, camera.aspectRatio, '2D');
-        //     camera.position.copy(position);
-        // }
+    // useEffect(() => {
+    //     if (!from || !routeTargetId || config.ROLE === 'PORTAL') {
+    //         if (config.ROLE === 'PORTAL' && routeTargetId) {
+    //             const targetMesh = scene.getObjectByProperty('object_id', routeTargetId);
+    //             if (targetMesh) {
+    //                 setRouteTubes([targetMesh as IExtMesh])
+    //             }
+    //         } else {
+    //             setRouteTubes([]);
+    //         }
+    //         return;
+    //     }
+    //     if (!amenityTargetType) {
+    //         floors.forEach(floor => {
+    //             floor.escalatorMeshes = [];
+    //         });
+    //     }
 
 
-        setRouteTubes(route);
+    //     console.log('Make route from %s to %s', from, routeTargetId, pathFinderGraph);
 
-    }, [ from, routeTargetId, scene, camera, floors, accentColor, pathFinderGraph, style, meshFloors.escalator_nodes ]);
+    //     /* MAKE ROUTE PATH */
+
+    //     const route = create_route(from, routeTargetId, scene, floors, meshFloors.escalator_nodes, pathFinderGraph, style);
+
+    //     // TODO: activate object (moved out of create_route function)
+    //     // makeObjectActive(to_mesh_object_id, accentColor, scene);
+
+    //     // TODO: focus object (moved out of create_route function)
+    //     // if (!routePaths.length) {
+    //     //     let obj = scene.getObjectByProperty('object_id', to_mesh_object_id);
+    //     //     const {position, target} =get_camera_focus_object([obj], camera.fov, camera.aspectRatio, '2D');
+    //     //     camera.position.copy(position);
+    //     // }
+
+
+    //     setRouteTubes(route);
+
+    // }, [ from, routeTargetId, scene, camera, floors, accentColor, pathFinderGraph, style, meshFloors.escalator_nodes ]);
 
     const selectedFloorMeshParams = meshFloors.meshParams[currentFloorIndex];
     useEffect(() => {
