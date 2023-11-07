@@ -5,6 +5,7 @@ import demoData from './demo/data.json';
 interface useMapIt2DataProps {
     CENTER_ID: string;
     mapitData?: MapIt2Response;
+    APIUri?: string;
 }
 
 /**
@@ -12,7 +13,7 @@ interface useMapIt2DataProps {
  * @param CENTER_ID
  * @param mapitData
  */
-export function useMapit2Data({ CENTER_ID, mapitData }: useMapIt2DataProps) {
+export function useMapit2Data({ CENTER_ID, mapitData, APIUri }: useMapIt2DataProps) {
     const [data, setData] = useState<MapIt2Response|null>(null);
 
     if (!CENTER_ID && !mapitData) {
@@ -29,7 +30,7 @@ export function useMapit2Data({ CENTER_ID, mapitData }: useMapIt2DataProps) {
             return;
         }
 
-        const webApiUri = process.env.REACT_APP_WEB_API_URI || null;
+        const webApiUri = APIUri || null;
 
         if (webApiUri) {
             const retailersApiUri = `${webApiUri}/retailers/?limit=1000&page=1`;
