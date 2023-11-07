@@ -318,6 +318,8 @@ const SceneComponent = (params:ISceneComponentProps) => {
 
     if (!config || !meshFloors.meshParams.length) {
         console.warn('LOADING MAP')
+        console.warn('Config', config)
+        console.warn('MeshFloors', meshFloors)
         return <div>Loading Map</div>
     }
 
