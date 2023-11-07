@@ -22,6 +22,7 @@ export function useMapit2Data({ CENTER_ID, mapitData, APIUri }: useMapIt2DataPro
     }
 
     useEffect(() => {
+        console.warn('Start Fetch');
         if (mapitData) {
             setData(mapitData);
             return;
@@ -31,13 +32,17 @@ export function useMapit2Data({ CENTER_ID, mapitData, APIUri }: useMapIt2DataPro
             return;
         }
 
-        const webApiUri = APIUri || null;
+       
 
+        const webApiUri = APIUri || null;
+    
+        console.warn('Start Fetch to ', webApiUri);
         if (webApiUri) {
             const retailersApiUri = `${webApiUri}/retailers/?limit=1000&page=1`;
             const mapObjsApiUri = `${webApiUri}/mapit2/data/`;
             const floorsApiUri = `${webApiUri}/mapit2/floors/?limit=1000&offset=0`;
 
+            console.warn('Fetch');
             const retailersPromise = fetch(retailersApiUri, {
                 headers: {
                     center_id: CENTER_ID,
@@ -61,6 +66,7 @@ export function useMapit2Data({ CENTER_ID, mapitData, APIUri }: useMapIt2DataPro
                 mapObjsPromise,
                 floorsPromise,
             ]).then(data => {
+                console.log('Finish fetch',data);
                 if (data) {
                     const responseData: Partial<MapIt2Response> = {};
                     responseData.retailers = data[0].items.map((item: any): IRetailer => ({
