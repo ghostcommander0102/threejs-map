@@ -11,9 +11,10 @@ export interface IAppProps {
     config: Partial<IJsonConfig>;
     stats?: boolean;
     onSettingsLoading?: (settings: MapIt2Response) => void;
+    APIUri?: string;
 }
 
-function MapBox({ mapitData, config, onSettingsLoading }: IAppProps) {
+function MapBox({ mapitData, config, onSettingsLoading, APIUri }: IAppProps) {
 
   const [selectedActiveObjectId, setSelectedActiveObjectId] = useState<string>('');
   const [mapData, setMapData] = useState<any>(undefined);
