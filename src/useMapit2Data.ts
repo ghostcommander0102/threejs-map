@@ -35,7 +35,6 @@ export function useMapit2Data({ CENTER_ID, mapitData, APIUri }: useMapIt2DataPro
 
         const webApiUri = APIUri || null;
     
-        console.warn('Start Fetch to ', webApiUri);
         if (webApiUri) {
             const retailersApiUri = `${webApiUri}/retailers/?limit=1000&page=1`;
             const mapObjsApiUri = `${webApiUri}/mapit2/data/`;
@@ -65,7 +64,6 @@ export function useMapit2Data({ CENTER_ID, mapitData, APIUri }: useMapIt2DataPro
                 mapObjsPromise,
                 floorsPromise,
             ]).then(data => {
-                console.log('Finish fetch',data);
                 if (data) {
                     const responseData: Partial<MapIt2Response> = {};
                     responseData.retailers = data[0].items.map((item: any): IRetailer => ({
@@ -88,7 +86,6 @@ export function useMapit2Data({ CENTER_ID, mapitData, APIUri }: useMapIt2DataPro
                     responseData.kiosks = [];
                     responseData.amenities = {...demoData.amenities};
 
-                    console.warn('DATA', responseData);
                     setData({...responseData as MapIt2Response})
                 }
             })

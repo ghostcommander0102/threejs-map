@@ -70,7 +70,6 @@ export type TFormMapObjData = {
 }
 
 const SceneComponent = (params:ISceneComponentProps) => {
-    console.log('Params', params);
     const data = useMapit2Data({ mapitData:params.mapitData, CENTER_ID: params.config.CENTER_ID as string, APIUri: params.APIUri as string});
     const [selectedFloorIndex, setSelectedFloorIndex] = useState<number>(-1);
     const [formMapObjData, setFormMapObjData] = useState<TFormMapObjData[]>([]);
@@ -172,56 +171,56 @@ const SceneComponent = (params:ISceneComponentProps) => {
         document.body.style.cursor = currentHoveredObject? 'pointer' : 'default';
     }, [currentHoveredObject]);
 
-    const [ currKioskObj, currKioskFloorIndex, kioskError ]: [ Mesh | null, number, string ] = useMemo(() => {
-        if (!config) {
-            return [ null, 0, '' ] // not an error - loading/initializing
-        }
-        let kioskError = '';
-        let currKioskObj: Mesh | null = null;
-        let currKioskFloorIndex = 0;
-        if (config.KIOSKS && config.KIOSKS[config.KIOSK]) {
-            const kioskMapObjName = config.KIOSKS[config.KIOSK].map_obj_name;
-            const currKioskMeshParams = meshParams.flat().find(mesh => mesh.object_id === kioskMapObjName);
-            if (currKioskMeshParams) {
-                currKioskObj = currKioskMeshParams.mesh;
-                currKioskFloorIndex = currKioskMeshParams.floor_index;
-            }
-        } else {
-            if (config.ROLE === 'WEBSITE') {
-                kioskError = "This Kiosk is not assigned in MAP, so routes won't work. Please assign the Kiosk from Edit Map first.";
-            }
+    // const [ currKioskObj, currKioskFloorIndex, kioskError ]: [ Mesh | null, number, string ] = useMemo(() => {
+    //     if (!config) {
+    //         return [ null, 0, '' ] // not an error - loading/initializing
+    //     }
+    //     let kioskError = '';
+    //     let currKioskObj: Mesh | null = null;
+    //     let currKioskFloorIndex = 0;
+    //     if (config.KIOSKS && config.KIOSKS[config.KIOSK]) {
+    //         const kioskMapObjName = config.KIOSKS[config.KIOSK].map_obj_name;
+    //         const currKioskMeshParams = meshParams.flat().find(mesh => mesh.object_id === kioskMapObjName);
+    //         if (currKioskMeshParams) {
+    //             currKioskObj = currKioskMeshParams.mesh;
+    //             currKioskFloorIndex = currKioskMeshParams.floor_index;
+    //         }
+    //     } else {
+    //         if (config.ROLE === 'WEBSITE') {
+    //             kioskError = "This Kiosk is not assigned in MAP, so routes won't work. Please assign the Kiosk from Edit Map first.";
+    //         }
 
-            console.error('Kiosk not found in config');
-            kioskError = 'Map initialization error';
-        }
+    //         console.error('Kiosk not found in config');
+    //         kioskError = 'Map initialization error';
+    //     }
 
-        return [ currKioskObj, currKioskFloorIndex, kioskError]
-    }, [config, meshParams]);
+    //     return [ currKioskObj, currKioskFloorIndex, kioskError]
+    // }, [config, meshParams]);
 
     const resetHandle = () => {
-        setSelectedFloorIndex(currKioskFloorIndex);
+        // setSelectedFloorIndex(currKioskFloorIndex);
         setSelectedActiveObjectId('');
     }
 
-    useEffect(() => {
-        const currKioskLogo = currKioskObj? meshFloors.storeLogos.flat().find(storeLogo => storeLogo.storeLogo.object_id === 'custom-layer-' + (currKioskObj as IExtMesh).object_id)?.storeLogo : null;
-        if (currKioskLogo && config?.ROLE !== 'PORTAL' && config) {
-            const koef = cameraLength/(config.CAMERA.maxDistance - config.CAMERA.minDistance);
-            currKioskLogo.userData.htmlContent = <MapCenterMarker size={Number(config.KIOSK_SIZE)} koef={1-koef} />
-            currKioskLogo.position.z = -(koef*80);
-            meshFloors.storeLogos.flat().map(storeLogo => {
-                if (storeLogo.storeLogo.object_id === currKioskLogo.object_id) {
-                    storeLogo.storeLogo.visible = false;
-                }
-                return null;
-            })
-        }
-        return () => {
-            if (currKioskLogo) {
-                currKioskLogo.userData.htmlContent = null;
-            }
-        }
-    }, [meshFloors, currKioskObj, cameraLength]);
+    // useEffect(() => {
+    //     const currKioskLogo = currKioskObj? meshFloors.storeLogos.flat().find(storeLogo => storeLogo.storeLogo.object_id === 'custom-layer-' + (currKioskObj as IExtMesh).object_id)?.storeLogo : null;
+    //     if (currKioskLogo && config?.ROLE !== 'PORTAL' && config) {
+    //         const koef = cameraLength/(config.CAMERA.maxDistance - config.CAMERA.minDistance);
+    //         currKioskLogo.userData.htmlContent = <MapCenterMarker size={Number(config.KIOSK_SIZE)} koef={1-koef} />
+    //         currKioskLogo.position.z = -(koef*80);
+    //         meshFloors.storeLogos.flat().map(storeLogo => {
+    //             if (storeLogo.storeLogo.object_id === currKioskLogo.object_id) {
+    //                 storeLogo.storeLogo.visible = false;
+    //             }
+    //             return null;
+    //         })
+    //     }
+    //     return () => {
+    //         if (currKioskLogo) {
+    //             currKioskLogo.userData.htmlContent = null;
+    //         }
+    //     }
+    // }, [meshFloors, currKioskObj, cameraLength]);
 
     useEffect(() => {
         if (meshFloors.meshParams && meshFloors.meshParams.length && selectedActiveObjectId && meshObjectContext?.SetMeshObject) {
@@ -322,16 +321,16 @@ const SceneComponent = (params:ISceneComponentProps) => {
         return <div>Loading Map</div>
     }
 
-    if (kioskError) {
-        return <div>{kioskError}</div>
-    }
+    // if (kioskError) {
+    //     return <div>{kioskError}</div>
+    // }
 
-    const currentFloorIndex = selectedFloorIndex > -1 ? selectedFloorIndex : currKioskFloorIndex;
+    const currentFloorIndex = selectedFloorIndex > -1 ? selectedFloorIndex : 0//currKioskFloorIndex;
 
-    if (!currKioskObj) {
-        console.error('NO KIOSK OBJECT FOUND');
-        return <div>Map initialization error</div>
-    }
+    // if (!currKioskObj) {
+    //     console.error('NO KIOSK OBJECT FOUND');
+    //     return <div>Map initialization error</div>
+    // }
 
     // make sure that meshFloors conditionals are not null
     const meshFloorsChecked: IMeshParams = meshFloors as IMeshParams;
@@ -381,7 +380,7 @@ const SceneComponent = (params:ISceneComponentProps) => {
                         meshFloors={meshFloorsChecked}
                         activeObjectId={activeObjectId}
                         hoverObjectId={hoverObjectId}
-                        currKioskObj={currKioskObj}
+                        // currKioskObj={currKioskObj}
                         routeTargetId={activeObjectId}
                         currentFloorIndex={currentFloorIndex}
                         onPointerEnter={onPointerEnter}

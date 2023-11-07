@@ -17,7 +17,7 @@ interface IFloorsMapProps {
     onPointerMove?: (e: ThreeEvent<PointerEvent>) => void;
     onClick?: (e: ThreeEvent<MouseEvent>) => void;
     onCameraMove?: (e: any) => void;
-    currKioskObj: Mesh;
+    currKioskObj?: Mesh;
     routeTargetId?: string;
     amenityTargetType: string;
     activeObjectId?: string;
@@ -201,7 +201,7 @@ export const FloorsMap = (params:IFloorsMapProps) => {
                     key={`Map-${index}`}
                     visible={currentFloorIndex === index}
                     floorIndex = {index}
-                    currKioskObj={params.currKioskObj}
+                    currKioskObj={params.currKioskObj ?? null}
                     activeObjectId={params.activeObjectId}
                     hoverObjectId={params.hoverObjectId}
                     meshFloors={meshFloors}
