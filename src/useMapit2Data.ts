@@ -22,7 +22,6 @@ export function useMapit2Data({ CENTER_ID, mapitData, APIUri }: useMapIt2DataPro
     }
 
     useEffect(() => {
-        console.warn('Start Fetch');
         if (mapitData) {
             setData(mapitData);
             return;
