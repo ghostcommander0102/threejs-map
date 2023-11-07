@@ -59,8 +59,7 @@ let activeMapObjectName = null;
 const floorsData:IFloorData[] = [];
 const floors = [] as Floor[];
 let floors_loaded = 0;
-const BASE_URL = process.env.REACT_APP_WEB_API_URI;
-const MEDIA_STORAGE_URI = process.env.REACT_APP_MEDIA_STORAGE_URI;
+const MEDIA_STORAGE_URI = "https://mycenterportal-media-staging.s3.us-east-2.amazonaws.com";
 
 function select<T>(...values: T[]) {
     return values.find(value => value !== '' && value != null) || values.at(-1);
