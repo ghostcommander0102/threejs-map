@@ -51,13 +51,13 @@ const amenitiesList: IAmenitiesInteractiveList[] = [
 ] 
 
 interface ISceneComponentProps {
+    APIUri?: string;
     mapitData?: MapIt2Response;
     config: Partial<IJsonConfig>;
     selectedActiveObjectId: string;
     setSelectedActiveObjectId: React.Dispatch<React.SetStateAction<string>>;
     onMapDataUpdate?: (data: MapObj[]) => void;
     onSettingsLoading?: (settings: MapIt2Response) => void;
-    APIUri?: string;
 }
 
 export interface IZoomData {
@@ -70,7 +70,7 @@ export type TFormMapObjData = {
 }
 
 const SceneComponent = (params:ISceneComponentProps) => {
-    const data = useMapit2Data({ mapitData:params.mapitData, CENTER_ID: params.config.CENTER_ID as string, APIUri: params.APIUri});
+    const data = useMapit2Data({ mapitData:params.mapitData, CENTER_ID: params.config.CENTER_ID as string, APIUri: params.APIUri as string});
     const [selectedFloorIndex, setSelectedFloorIndex] = useState<number>(-1);
     const [formMapObjData, setFormMapObjData] = useState<TFormMapObjData[]>([]);
 
