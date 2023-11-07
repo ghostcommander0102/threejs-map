@@ -25,6 +25,7 @@ declare const meta: {
 export default meta;
 type Story = StoryObj<typeof meta>;
 export declare const Editor35: Story;
+export declare const Editor33: Story;
 export declare const Editor8: Story;
 export declare const Viewer: Story;
 export declare const WidthDefaultSelected: Story;

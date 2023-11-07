@@ -54,6 +54,16 @@ export const Editor35: Story = {
   },
 };
 
+export const Editor33: Story = {
+  name: 'Editor: Center 33',
+  args: {
+    config:{
+      ROLE: "PORTAL",
+      CENTER_ID:'33',
+      KIOSK: "102"
+    }
+  },
+};
 export const Editor8: Story = {
   name: 'Editor: Center 8',
   args: {

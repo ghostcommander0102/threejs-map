@@ -1,5 +1,6 @@
 import {useEffect, useState} from "react";
-import {MapIt2Response} from "./mapitApiTypes";
+import {IRetailer, MapIt2Response} from "./mapitApiTypes";
+import demoData from './demo/data.json';
 
 interface useMapIt2DataProps {
     CENTER_ID: string;
@@ -27,14 +28,63 @@ export function useMapit2Data({ CENTER_ID, mapitData }: useMapIt2DataProps) {
         if (!CENTER_ID) {
             return;
         }
-        // const url = '/data/mapit2/' + CENTER_ID + '.json';
-        const url = `https://test.mycenterdeals.com/api/mapit2/data?center=${CENTER_ID}&time=1693919608355`;
 
-        fetch(url)
-            .then(response => response.json())
-            .then((response: MapIt2Response) => {
-                setData({...response});
-            });
+        const webApiUri = process.env.REACT_APP_WEB_API_URI || null;
+
+        if (webApiUri) {
+            const retailersApiUri = `${webApiUri}/retailers/?limit=1000&page=1`;
+            const mapObjsApiUri = `${webApiUri}/mapit2/data/`;
+            const floorsApiUri = `${webApiUri}/mapit2/floors/?limit=1000&offset=0`;
+
+            const retailersPromise = fetch(retailersApiUri, {
+                headers: {
+                    center_id: CENTER_ID,
+                }
+            }).then(repsonse => repsonse.json())
+
+            const mapObjsPromise = fetch(mapObjsApiUri, {
+                headers: {
+                    center_id: CENTER_ID,
+                }
+            }).then(repsonse => repsonse.json())
+
+            const floorsPromise = fetch(floorsApiUri, {
+                headers: {
+                    center_id: CENTER_ID,
+                }
+            }).then(repsonse => repsonse.json())
+
+            Promise.all<Array<any>>([
+                retailersPromise,
+                mapObjsPromise,
+                floorsPromise,
+            ]).then(data => {
+                if (data) {
+                    const responseData: Partial<MapIt2Response> = {};
+                    responseData.retailers = data[0].items.map((item: any): IRetailer => ({
+                        id: item.id,
+                        retail_name: item.name,
+                        slug: item.slug,
+                        location: item.location,
+                        retailer_phone: '',
+                        retailer_description: '',
+                        logo: item.media.url,
+                        map_obj_name: '',
+                    }));
+                    responseData.map_objs = [...data[1].items];
+                    responseData.floors = [ ...data[2].items ];
+                    responseData.camera_controls_states = {...demoData.camera_controls_states};
+                    responseData.settings = {
+                        ...demoData.settings,
+                        KIOSK_SIZE: "1",
+                    }
+                    responseData.kiosks = [];
+                    responseData.amenities = {...demoData.amenities};
+
+                    setData({...responseData as MapIt2Response})
+                }
+            })
+        }
 
     }, [CENTER_ID, mapitData]);
 

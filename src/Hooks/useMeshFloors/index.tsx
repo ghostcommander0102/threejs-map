@@ -59,7 +59,8 @@ let activeMapObjectName = null;
 const floorsData:IFloorData[] = [];
 const floors = [] as Floor[];
 let floors_loaded = 0;
-const BASE_URL = 'https://test.mycenterdeals.com/data/mapit2/';
+const BASE_URL = process.env.REACT_APP_WEB_API_URI;
+const MEDIA_STORAGE_URI = process.env.REACT_APP_MEDIA_STORAGE_URI;
 
 function select<T>(...values: T[]) {
     return values.find(value => value !== '' && value != null) || values.at(-1);
@@ -91,7 +92,6 @@ function makeIndexedMapObjects(map_objs: MapObj[]) {
 }
 
 const init = (config: IJsonConfig, floors:IFloorData[], response: MapIt2Response) => {
-
     const KIOSKS:Record<string, Kiosk> = {};
     response.kiosks.forEach((kiosk) => {
         KIOSKS[kiosk.id] = kiosk;
@@ -118,7 +118,7 @@ const init = (config: IJsonConfig, floors:IFloorData[], response: MapIt2Response
         floors.push({
             id: value.id,
             // svg_map: BASE_URL + 'data/mapit2/' + value.svg,
-            svg_map: BASE_URL + value.svg,
+            svg_map: MEDIA_STORAGE_URI + '/' + value.svg,
             title: value.title,
             objsGroup: objsGroup,
             interactiveObjs: [],
@@ -248,7 +248,7 @@ const useMeshFloors = (data: MapIt2Response|null, jsonConfig?: Partial<IJsonConf
         const processedConfig = init(jsonConfig ? {...config, ...jsonConfig} : config, floorsData, data as MapIt2Response);
         const values: string[] = [];
         processedConfig.FLOORS.forEach((value) => {
-            values.push(`${BASE_URL}${value.svg}`);
+            values.push(`${MEDIA_STORAGE_URI}/${value.svg}`);
         });
 
         setProcessedConfig(processedConfig);
