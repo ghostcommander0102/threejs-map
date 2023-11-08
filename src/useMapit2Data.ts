@@ -36,9 +36,9 @@ export function useMapit2Data({ CENTER_ID, mapitData, APIUri }: useMapIt2DataPro
         const webApiUri = APIUri || null;
     
         if (webApiUri) {
-            const retailersApiUri = `${webApiUri}/retailers/?limit=1000&page=1`;
-            const mapObjsApiUri = `${webApiUri}/mapit2/data/`;
-            const floorsApiUri = `${webApiUri}/mapit2/floors/?limit=1000&offset=0`;
+            const retailersApiUri = `${webApiUri}/v1/retailers/?limit=1000&page=1`;
+            const mapObjsApiUri = `${webApiUri}/v1/mapit2/data/`;
+            const floorsApiUri = `${webApiUri}/v1/mapit2/floors/?limit=1000&offset=0`;
 
             console.warn('Fetch');
             const retailersPromise = fetch(retailersApiUri, {
