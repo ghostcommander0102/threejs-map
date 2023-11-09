@@ -3,7 +3,7 @@ import {Canvas, ThreeEvent, useThree} from "@react-three/fiber";
 import useMeshFloors, { textLogoNamePrefix } from "../../Hooks/useMeshFloors";
 import {SceneProperties} from "./SceneProperties";
 import {CameraProperties} from "./CameraProperties";
-import {Mesh, Object3D} from "three";
+import {DoubleSide, Mesh, MeshLambertMaterial, Object3D} from "three";
 import {IAmenitiesInteractiveList, IExtMesh, IJsonConfig, IMeshParams, TMapMode, TMapSettingsProps} from "src/types";
 import {FloorsMap} from "./FloorsMap";
 import {useMapit2Data} from "../../useMapit2Data";
@@ -16,6 +16,7 @@ import { useMeshObjectContext } from "src/contexts/MeshObjectContextProvider";
 import MapboxForm from "../../components/MapboxForm/MapboxForm";
 import styles from '../../MapBox.module.css';
 import {Alert} from 'react-bootstrap';
+import { hex_to_color } from "src/helpers/misc";
 
 const amenitiesList: IAmenitiesInteractiveList[] = [
     {
@@ -51,13 +52,13 @@ const amenitiesList: IAmenitiesInteractiveList[] = [
 ] 
 
 interface ISceneComponentProps {
-    APIUri?: string;
     mapitData?: MapIt2Response;
     config: Partial<IJsonConfig>;
     selectedActiveObjectId: string;
     setSelectedActiveObjectId: React.Dispatch<React.SetStateAction<string>>;
     onMapDataUpdate?: (data: MapObj[]) => void;
     onSettingsLoading?: (settings: MapIt2Response) => void;
+    APIUri?: string;
 }
 
 export interface IZoomData {
@@ -70,7 +71,7 @@ export type TFormMapObjData = {
 }
 
 const SceneComponent = (params:ISceneComponentProps) => {
-    const data = useMapit2Data({ mapitData:params.mapitData, CENTER_ID: params.config.CENTER_ID as string, APIUri: params.APIUri as string});
+    const data = useMapit2Data({ mapitData:params.mapitData, CENTER_ID: params.config.CENTER_ID as string, APIUri: params.APIUri as string });
     const [selectedFloorIndex, setSelectedFloorIndex] = useState<number>(-1);
     const [formMapObjData, setFormMapObjData] = useState<TFormMapObjData[]>([]);
 
@@ -171,56 +172,56 @@ const SceneComponent = (params:ISceneComponentProps) => {
         document.body.style.cursor = currentHoveredObject? 'pointer' : 'default';
     }, [currentHoveredObject]);
 
-    // const [ currKioskObj, currKioskFloorIndex, kioskError ]: [ Mesh | null, number, string ] = useMemo(() => {
-    //     if (!config) {
-    //         return [ null, 0, '' ] // not an error - loading/initializing
-    //     }
-    //     let kioskError = '';
-    //     let currKioskObj: Mesh | null = null;
-    //     let currKioskFloorIndex = 0;
-    //     if (config.KIOSKS && config.KIOSKS[config.KIOSK]) {
-    //         const kioskMapObjName = config.KIOSKS[config.KIOSK].map_obj_name;
-    //         const currKioskMeshParams = meshParams.flat().find(mesh => mesh.object_id === kioskMapObjName);
-    //         if (currKioskMeshParams) {
-    //             currKioskObj = currKioskMeshParams.mesh;
-    //             currKioskFloorIndex = currKioskMeshParams.floor_index;
-    //         }
-    //     } else {
-    //         if (config.ROLE === 'WEBSITE') {
-    //             kioskError = "This Kiosk is not assigned in MAP, so routes won't work. Please assign the Kiosk from Edit Map first.";
-    //         }
+    const [ currKioskObj, currKioskFloorIndex, kioskError ]: [ Mesh | null, number, string ] = useMemo(() => {
+        if (!config) {
+            return [ null, 0, '' ] // not an error - loading/initializing
+        }
+        let kioskError = '';
+        let currKioskObj: Mesh | null = null;
+        let currKioskFloorIndex = 0;
+        if (config.KIOSKS && config.KIOSKS[config.KIOSK]) {
+            const kioskMapObjName = config.KIOSKS[config.KIOSK].map_obj_name;
+            const currKioskMeshParams = meshParams.flat().find(mesh => mesh.object_id === kioskMapObjName);
+            if (currKioskMeshParams) {
+                currKioskObj = currKioskMeshParams.mesh;
+                currKioskFloorIndex = currKioskMeshParams.floor_index;
+            }
+        } else {
+            if (config.ROLE === 'WEBSITE') {
+                // kioskError = "This Kiosk is not assigned in MAP, so routes won't work. Please assign the Kiosk from Edit Map first.";
+            }
 
-    //         console.error('Kiosk not found in config');
-    //         kioskError = 'Map initialization error';
-    //     }
+            console.error('Kiosk not found in config');
+            // kioskError = 'Map initialization error';
+        }
 
-    //     return [ currKioskObj, currKioskFloorIndex, kioskError]
-    // }, [config, meshParams]);
+        return [ currKioskObj, currKioskFloorIndex, kioskError]
+    }, [config, meshParams]);
 
     const resetHandle = () => {
-        setSelectedFloorIndex(0);//currKioskFloorIndex);
+        setSelectedFloorIndex(currKioskFloorIndex);
         setSelectedActiveObjectId('');
     }
 
-    // useEffect(() => {
-    //     const currKioskLogo = currKioskObj? meshFloors.storeLogos.flat().find(storeLogo => storeLogo.storeLogo.object_id === 'custom-layer-' + (currKioskObj as IExtMesh).object_id)?.storeLogo : null;
-    //     if (currKioskLogo && config?.ROLE !== 'PORTAL' && config) {
-    //         const koef = cameraLength/(config.CAMERA.maxDistance - config.CAMERA.minDistance);
-    //         currKioskLogo.userData.htmlContent = <MapCenterMarker size={Number(config.KIOSK_SIZE)} koef={1-koef} />
-    //         currKioskLogo.position.z = -(koef*80);
-    //         meshFloors.storeLogos.flat().map(storeLogo => {
-    //             if (storeLogo.storeLogo.object_id === currKioskLogo.object_id) {
-    //                 storeLogo.storeLogo.visible = false;
-    //             }
-    //             return null;
-    //         })
-    //     }
-    //     return () => {
-    //         if (currKioskLogo) {
-    //             currKioskLogo.userData.htmlContent = null;
-    //         }
-    //     }
-    // }, [meshFloors, currKioskObj, cameraLength]);
+    useEffect(() => {
+        const currKioskLogo = currKioskObj? meshFloors.storeLogos.flat().find(storeLogo => storeLogo.storeLogo.object_id === 'custom-layer-' + (currKioskObj as IExtMesh).object_id)?.storeLogo : null;
+        if (currKioskLogo && config?.ROLE !== 'PORTAL' && config) {
+            const koef = cameraLength/(config.CAMERA.maxDistance - config.CAMERA.minDistance);
+            currKioskLogo.userData.htmlContent = <MapCenterMarker size={Number(config.KIOSK_SIZE)} koef={1-koef} />
+            currKioskLogo.position.z = -(koef*80);
+            meshFloors.storeLogos.flat().map(storeLogo => {
+                if (storeLogo.storeLogo.object_id === currKioskLogo.object_id) {
+                    storeLogo.storeLogo.visible = false;
+                }
+                return null;
+            })
+        }
+        return () => {
+            if (currKioskLogo) {
+                currKioskLogo.userData.htmlContent = null;
+            }
+        }
+    }, [meshFloors, currKioskObj, cameraLength]);
 
     useEffect(() => {
         if (meshFloors.meshParams && meshFloors.meshParams.length && selectedActiveObjectId && meshObjectContext?.SetMeshObject) {
@@ -262,6 +263,13 @@ const SceneComponent = (params:ISceneComponentProps) => {
             if (logoParams) {
                 result.push(logoParams.storeLogo)
             }
+
+            // if (result.length === 1) {
+            //     const mediaObject = new Object3D() as IExtMesh; 
+            //     mediaObject.object_id =  `${textLogoNamePrefix}${(object as IExtMesh).object_id}`;
+
+            //     result.push(mediaObject);
+            // }
 
             meshObjectContext.SetMeshObject([...result]);
         }
@@ -325,7 +333,7 @@ const SceneComponent = (params:ISceneComponentProps) => {
     //     return <div>{kioskError}</div>
     // }
 
-    const currentFloorIndex = selectedFloorIndex > -1 ? selectedFloorIndex : 0//currKioskFloorIndex;
+    const currentFloorIndex = selectedFloorIndex > -1 ? selectedFloorIndex : currKioskFloorIndex;
 
     // if (!currKioskObj) {
     //     console.error('NO KIOSK OBJECT FOUND');
@@ -380,7 +388,8 @@ const SceneComponent = (params:ISceneComponentProps) => {
                         meshFloors={meshFloorsChecked}
                         activeObjectId={activeObjectId}
                         hoverObjectId={hoverObjectId}
-                        //currKioskObj={currKioskObj}
+                        // @ts-ignore
+                        currKioskObj={currKioskObj}
                         routeTargetId={activeObjectId}
                         currentFloorIndex={currentFloorIndex}
                         onPointerEnter={onPointerEnter}

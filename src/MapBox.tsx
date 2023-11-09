@@ -35,7 +35,7 @@ function MapBox({ mapitData, config, onSettingsLoading, APIUri }: IAppProps) {
   return (
     <MeshObjectContextProvider>
       <div className={`${styles['mapbox-component']} ${config.ROLE !== 'PORTAL'? styles.view : ''}`}>
-          <SceneComponent setSelectedActiveObjectId={setSelectedActiveObjectId} selectedActiveObjectId={selectedActiveObjectId} mapitData={mapData} config={config} onSettingsLoading={onSettingsLoading} APIUri={APIUri} />
+          <SceneComponent setSelectedActiveObjectId={setSelectedActiveObjectId} selectedActiveObjectId={selectedActiveObjectId} mapitData={mapData} config={config} onSettingsLoading={onSettingsLoading} APIUri={APIUri}/>
         <div className={styles.hide}>
           <div id="map-special-svg-kiosk">
             <svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 443.83 787.21">

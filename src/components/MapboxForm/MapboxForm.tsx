@@ -10,6 +10,8 @@ import { DoubleSide, Euler, MeshBasicMaterial, MeshPhongMaterial, Object3D, Vect
 // import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry";
 import { Geometry, TextGeometry } from "three-stdlib";
 import { IConfig, IExtMesh, IJsonConfig, IMeshParamsTmp } from "src/types";
+import fontData from 'src/Hooks/useMeshFloors/optimer_regular.typeface.json'
+import { FontData, useFont } from "@react-three/drei";
 
 
 interface IMapboxForm {
@@ -40,7 +42,7 @@ type TIncDecInterval = {
     [Key in TIncDecKey]?: NodeJS.Timeout | null;
 }
 
-const getDefaultMapOjbValues = (centerId: string): MapObj => ({
+export const getDefaultMapOjbValues = (centerId: string): MapObj => ({
 	id: '',
 	center_id: centerId,
 	retailer_id: '',
@@ -65,6 +67,10 @@ const MapboxForm = (params: IMapboxForm) => {
 
     const {data, setData, selectedId, centerId, config, floorIndex, meshFloors} = params;
 
+    const myFont = useFont(fontData as unknown as FontData);
+
+    console.debug({params});
+
     const [mainTabKey, setMainTabKey] = useState<TMainTabsKey>('');
     const [retailerTabsKey, setRetailerTabsKey] = useState<TRetailerTabsKey>('');
     const [specialTabsKey, setSpecialTabsKey] = useState<TSpecialTabsKey>('');
@@ -81,6 +87,7 @@ const MapboxForm = (params: IMapboxForm) => {
                 handleChangeTab(retailerTabsKey);
                 break;
         }
+        console.debug({formData});
     }, [formData, mainTabKey, retailerTabsKey])
 
     const handleChangeTab = (k:  any | null) => {
@@ -224,14 +231,21 @@ const MapboxForm = (params: IMapboxForm) => {
     }
 
     const makeTextGeometry = (obj: IExtMesh, text: string, size: string) => {
+        console.debug({
+            obj,
+            text,
+            size,
+        })
         let text_geometry = new TextGeometry(text, {
-            font: obj.userData.font,
+            font: (obj.userData && obj.userData.font)? obj.userData.font : myFont,
             size: parseInt(size),
             height: 0.01,
             curveSegments: 4,
         });
         text_geometry.center();
-        obj.geometry.dispose();
+        if (obj.geometry) {
+            obj.geometry.dispose();
+        }
         obj.geometry = text_geometry;
     }
 
@@ -274,7 +288,7 @@ const MapboxForm = (params: IMapboxForm) => {
         // }
 
         context?.MeshObject?.forEach((obj, index) => {
-            if (!obj.userData.position) {
+            if (!(obj.userData && obj.userData.position)) {
                 obj.userData.position = new Vector3();
                 obj.userData.position.copy(obj.position);
             }
@@ -420,6 +434,12 @@ const MapboxForm = (params: IMapboxForm) => {
             const index = data.map_objs.findIndex((value: any) => value.map_obj_name === selectedId);
             if (index !== -1) {
                 setFormData({...data.map_objs[index]});
+            } else {
+                //TODO remove center_id magic number
+                setFormData({
+                    ...getDefaultMapOjbValues('33'),
+                    id: (new Date()).getTime(),
+                });
             }
         }
         return () => {

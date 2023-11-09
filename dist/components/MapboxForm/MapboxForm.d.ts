@@ -9,5 +9,6 @@ interface IMapboxForm {
     selectedId: string;
     centerId: string;
 }
+export declare const getDefaultMapOjbValues: (centerId: string) => MapObj;
 declare const MapboxForm: (params: IMapboxForm) => import("react/jsx-runtime").JSX.Element;
 export default MapboxForm;

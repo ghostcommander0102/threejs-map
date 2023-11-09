@@ -74,6 +74,13 @@ function layer_text_logo_position(mesh: Mesh, newMeshPos: Vector3, mesh_size: Ve
 export function layer_text_logo_position_by_id(object_id: string, newMeshPos: Vector3, mesh_size: Vector3, newMesh: Mesh, allIndexedMapObjects: Record<any, any>) {
     let map_obj = allIndexedMapObjects[object_id];
 
+    if (!map_obj) {
+        map_obj = {
+            offsetX: 0,
+            offsetY: 0,
+        }
+    }
+
     let offsetX = parseInt(map_obj.offsetX);
     let offsetY = parseInt(map_obj.offsetY);
 
@@ -308,7 +315,7 @@ export function get_store_name_logo_geo(geometry: BufferGeometry, object_id:stri
     boundingBox.getSize(mesh_size);
 
     //@ts-ignore
-    const map_obj = allIndexedMapObjects[object_id];
+    const map_obj = allIndexedMapObjects[object_id]? allIndexedMapObjects[object_id] : {layer_type: 'custom_text', 'custom_text': 'TEXT', 'text_color': '000000', 'size': 8};
 
     if (['retail_name', 'retail_text', 'custom_text'].includes(map_obj.layer_type)) {
         let text = '';

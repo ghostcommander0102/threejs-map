@@ -91,6 +91,7 @@ function makeIndexedMapObjects(map_objs: MapObj[]) {
 }
 
 const init = (config: IJsonConfig, floors:IFloorData[], response: MapIt2Response) => {
+
     const KIOSKS:Record<string, Kiosk> = {};
     response.kiosks.forEach((kiosk) => {
         KIOSKS[kiosk.id] = kiosk;
@@ -242,7 +243,7 @@ const useMeshFloors = (data: MapIt2Response|null, jsonConfig?: Partial<IJsonConf
         if (!data) return;
 
 
-        console.log('useMeshFloors[data]', {data})
+        // console.log('useMeshFloors[data]', {data})
 
         const processedConfig = init(jsonConfig ? {...config, ...jsonConfig} : config, floorsData, data as MapIt2Response);
         const values: string[] = [];
@@ -295,6 +296,7 @@ const useMeshFloors = (data: MapIt2Response|null, jsonConfig?: Partial<IJsonConf
 
         const { GeometriesAndMaterials, graph, escalator_nodes } = loadFloors(floorsData, processedConfig, result, role);
         const TextsAndLogos:Array<{textMesh:IExtMesh}[]> = [];
+        console.debug({allNonIndexedMapObjects});
         allNonIndexedMapObjects.forEach((params) => {
             let values: IMeshValues | undefined;
             for (let i = 0; i < GeometriesAndMaterials.length; i++) {
@@ -313,6 +315,31 @@ const useMeshFloors = (data: MapIt2Response|null, jsonConfig?: Partial<IJsonConf
                 TextsAndLogos[values.floor_index].push(textParams);
             }
         })
+        const GAMCount = GeometriesAndMaterials.reduce((acc, item) => {
+            return (acc + item.length);
+        }, 0);
+        const countNonIndexedObjs = GAMCount - allNonIndexedMapObjects.length;
+        if (countNonIndexedObjs > 0) {
+            const mapObjNames = new Set<string>();
+            allNonIndexedMapObjects.forEach((item) => {
+                mapObjNames.add(item.map_obj_name);
+            });
+            GeometriesAndMaterials.forEach((items) => {
+                items.forEach(item => {
+                    if (!mapObjNames.has(item.object_id)) {
+                        const textParams = get_store_name_logo_geo(item.geometry, item.object_id, item.floor_index, textLogoNamePrefix, allIndexedMapObjects, allIndexedRetailers, config, myFont, floorsData, handleAsyncStoreLogos(item.floor_index));
+                        if (textParams) {
+                            console.count('TEXTPARAMS');
+                            if (!TextsAndLogos[item.floor_index]) {
+                                TextsAndLogos[item.floor_index] = [];
+                            }
+                            TextsAndLogos[item.floor_index].push(textParams);
+                        }
+                    };
+                })
+            });
+        }
+        console.debug({TextsAndLogos});
         setMeshParams(GeometriesAndMaterials);
         setTextParams(TextsAndLogos);
         setPathFinderGraph(graph);

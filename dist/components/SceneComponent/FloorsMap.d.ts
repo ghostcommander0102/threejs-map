@@ -11,7 +11,7 @@ interface IFloorsMapProps {
     onPointerMove?: (e: ThreeEvent<PointerEvent>) => void;
     onClick?: (e: ThreeEvent<MouseEvent>) => void;
     onCameraMove?: (e: any) => void;
-    currKioskObj?: Mesh;
+    currKioskObj: Mesh;
     routeTargetId?: string;
     amenityTargetType: string;
     activeObjectId?: string;

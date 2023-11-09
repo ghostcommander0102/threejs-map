@@ -12,7 +12,6 @@ interface useMapIt2DataProps {
  * This is a hook that fetches the mapit2 data from the server by CENTER_ID. or uses the data passed in.
  * @param CENTER_ID
  * @param mapitData
- * @param APIUri
  */
 export function useMapit2Data({ CENTER_ID, mapitData, APIUri }: useMapIt2DataProps) {
     const [data, setData] = useState<MapIt2Response|null>(null);
@@ -31,16 +30,13 @@ export function useMapit2Data({ CENTER_ID, mapitData, APIUri }: useMapIt2DataPro
             return;
         }
 
-       
-
         const webApiUri = APIUri || null;
-    
+
         if (webApiUri) {
             const retailersApiUri = `${webApiUri}/v1/retailers/?limit=1000&page=1`;
             const mapObjsApiUri = `${webApiUri}/v1/mapit2/data/`;
             const floorsApiUri = `${webApiUri}/v1/mapit2/floors/?limit=1000&offset=0`;
 
-            console.warn('Fetch');
             const retailersPromise = fetch(retailersApiUri, {
                 headers: {
                     center_id: CENTER_ID,
@@ -77,7 +73,7 @@ export function useMapit2Data({ CENTER_ID, mapitData, APIUri }: useMapIt2DataPro
                         map_obj_name: '',
                     }));
                     responseData.map_objs = [...data[1].items];
-                    responseData.floors = [ ...data[2].items ];
+                    responseData.floors = [ ...data[2].items.slice(0, 1) ];
                     responseData.camera_controls_states = {...demoData.camera_controls_states};
                     responseData.settings = {
                         ...demoData.settings,
