@@ -338,7 +338,7 @@ const useMeshFloors = (data: MapIt2Response|null, jsonConfig?: Partial<IJsonConf
                     if (!mapObjNames.has(item.object_id)) {
                         const textParams = get_store_name_logo_geo(item.geometry, item.object_id, item.floor_index, textLogoNamePrefix, allIndexedMapObjects, allIndexedRetailers, config, myFont, floorsData, handleAsyncStoreLogos(item.floor_index));
                         if (textParams) {
-                            console.count('TEXTPARAMS');
+                            
                             if (!TextsAndLogos[item.floor_index]) {
                                 TextsAndLogos[item.floor_index] = [];
                             }
