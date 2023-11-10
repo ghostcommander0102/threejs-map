@@ -5,16 +5,15 @@ import demoData from './demo/data.json';
 interface useMapIt2DataProps {
     CENTER_ID: string;
     mapitData?: MapIt2Response;
-    APIUri?: string;
+    webApiURI?: string;
 }
 
 /**
  * This is a hook that fetches the mapit2 data from the server by CENTER_ID. or uses the data passed in.
  * @param CENTER_ID
  * @param mapitData
- * @param APIUri
  */
-export function useMapit2Data({ CENTER_ID, mapitData, APIUri }: useMapIt2DataProps) {
+export function useMapit2Data({ CENTER_ID, mapitData, webApiURI }: useMapIt2DataProps) {
     const [data, setData] = useState<MapIt2Response|null>(null);
 
     if (!CENTER_ID && !mapitData) {
@@ -31,12 +30,14 @@ export function useMapit2Data({ CENTER_ID, mapitData, APIUri }: useMapIt2DataPro
             return;
         }
 
-        const webApiUri = APIUri || null;
+        let apiURI = webApiURI || null;
 
-        if (webApiUri) {
-            const retailersApiUri = `${webApiUri}/v1/retailers/?limit=1000&page=1`;
-            const mapObjsApiUri = `${webApiUri}/v1/mapit2/data/`;
-            const floorsApiUri = `${webApiUri}/v1/mapit2/floors/?limit=1000&offset=0`;
+        if (apiURI) {
+            const r = /\/$/;
+            apiURI = apiURI.replace(r, '');
+            const retailersApiUri = `${apiURI}/v1/retailers/?limit=1000&page=1`;
+            const mapObjsApiUri = `${apiURI}/v1/mapit2/data/`;
+            const floorsApiUri = `${apiURI}/v1/mapit2/floors/?limit=1000&offset=0`;
 
             const retailersPromise = fetch(retailersApiUri, {
                 headers: {
@@ -74,7 +75,7 @@ export function useMapit2Data({ CENTER_ID, mapitData, APIUri }: useMapIt2DataPro
                         map_obj_name: '',
                     }));
                     responseData.map_objs = [...data[1].items];
-                    responseData.floors = [ ...data[2].items.slice(0, 1) ];
+                    responseData.floors = [...data[2].items];
                     responseData.camera_controls_states = {...demoData.camera_controls_states};
                     responseData.settings = {
                         ...demoData.settings,

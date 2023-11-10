@@ -61,7 +61,9 @@ export const Editor33: Story = {
       ROLE: "PORTAL",
       CENTER_ID:'33',
       KIOSK: "102"
-    }
+    },
+    webApiURI: 'https://web-backend-staging.eyeonportal.com/',
+    mediaStorageURI: 'https://mycenterportal-media-staging.s3.us-east-2.amazonaws.com',
   },
 };
 export const Editor8: Story = {

@@ -58,7 +58,8 @@ interface ISceneComponentProps {
     setSelectedActiveObjectId: React.Dispatch<React.SetStateAction<string>>;
     onMapDataUpdate?: (data: MapObj[]) => void;
     onSettingsLoading?: (settings: MapIt2Response) => void;
-    APIUri?: string;
+    webApiURI?: string;
+    mediaStorageURI?: string;
 }
 
 export interface IZoomData {
@@ -71,7 +72,7 @@ export type TFormMapObjData = {
 }
 
 const SceneComponent = (params:ISceneComponentProps) => {
-    const data = useMapit2Data({ mapitData:params.mapitData, CENTER_ID: params.config.CENTER_ID as string, APIUri: params.APIUri as string });
+    const data = useMapit2Data({ mapitData:params.mapitData, CENTER_ID: params.config.CENTER_ID as string, webApiURI: params.webApiURI });
     const [selectedFloorIndex, setSelectedFloorIndex] = useState<number>(-1);
     const [formMapObjData, setFormMapObjData] = useState<TFormMapObjData[]>([]);
 
@@ -93,7 +94,7 @@ const SceneComponent = (params:ISceneComponentProps) => {
     }
 
 
-    const meshFloors = useMeshFloors(data, params.config, params.config.ROLE);
+    const meshFloors = useMeshFloors(data, params.config, params.config.ROLE, params.mediaStorageURI);
     const mapCenterMarkerRef = useRef(null);
     const labelRef = useRef<HTMLDivElement>(null);
     const [ currentHoveredObject, setCurrentHoveredObject ] = useState<Object3D | null>(null);

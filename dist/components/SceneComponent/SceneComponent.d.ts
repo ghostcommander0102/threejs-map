@@ -8,7 +8,8 @@ interface ISceneComponentProps {
     setSelectedActiveObjectId: React.Dispatch<React.SetStateAction<string>>;
     onMapDataUpdate?: (data: MapObj[]) => void;
     onSettingsLoading?: (settings: MapIt2Response) => void;
-    APIUri?: string;
+    webApiURI?: string;
+    mediaStorageURI?: string;
 }
 export interface IZoomData {
     direction: 'in' | 'out';

@@ -6,7 +6,8 @@ export interface IAppProps {
     config: Partial<IJsonConfig>;
     stats?: boolean;
     onSettingsLoading?: (settings: MapIt2Response) => void;
-    APIUri?: string;
+    webApiURI?: string;
+    mediaStorageURI?: string;
 }
-declare function MapBox({ mapitData, config, onSettingsLoading, APIUri }: IAppProps): import("react/jsx-runtime").JSX.Element | null;
+declare function MapBox({ mapitData, config, onSettingsLoading, webApiURI, mediaStorageURI }: IAppProps): import("react/jsx-runtime").JSX.Element | null;
 export default MapBox;

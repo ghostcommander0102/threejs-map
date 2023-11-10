@@ -69,8 +69,6 @@ const MapboxForm = (params: IMapboxForm) => {
 
     const myFont = useFont(fontData as unknown as FontData);
 
-    console.debug({params});
-
     const [mainTabKey, setMainTabKey] = useState<TMainTabsKey>('');
     const [retailerTabsKey, setRetailerTabsKey] = useState<TRetailerTabsKey>('');
     const [specialTabsKey, setSpecialTabsKey] = useState<TSpecialTabsKey>('');
@@ -87,7 +85,6 @@ const MapboxForm = (params: IMapboxForm) => {
                 handleChangeTab(retailerTabsKey);
                 break;
         }
-        console.debug({formData});
     }, [formData, mainTabKey, retailerTabsKey])
 
     const handleChangeTab = (k:  any | null) => {
@@ -128,9 +125,11 @@ const MapboxForm = (params: IMapboxForm) => {
                         let text = '';
                         switch (key) {
                             case 'retail_name':
-                                const retailIndex = data.retailers.findIndex((item: IRetailer) => formData.retailer_id === item.id);
+                                const retailIndex = data.retailers.findIndex((item: IRetailer) => formData.retailer_id === item.id.toString());
+
                                 if (retailIndex !== -1) {
                                     text = data.retailers[retailIndex].retail_name;
+
                                 }
                                 break;
                             case 'retail_text':
@@ -231,11 +230,6 @@ const MapboxForm = (params: IMapboxForm) => {
     }
 
     const makeTextGeometry = (obj: IExtMesh, text: string, size: string) => {
-        console.debug({
-            obj,
-            text,
-            size,
-        })
         let text_geometry = new TextGeometry(text, {
             font: (obj.userData && obj.userData.font)? obj.userData.font : myFont,
             size: parseInt(size),
@@ -288,7 +282,10 @@ const MapboxForm = (params: IMapboxForm) => {
         // }
 
         context?.MeshObject?.forEach((obj, index) => {
-            if (!(obj.userData && obj.userData.position)) {
+            if (!obj.userData) {
+                obj.userData = {};
+            }
+            if (!obj.userData.position) {
                 obj.userData.position = new Vector3();
                 obj.userData.position.copy(obj.position);
             }

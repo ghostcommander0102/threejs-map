@@ -59,7 +59,7 @@ let activeMapObjectName = null;
 const floorsData:IFloorData[] = [];
 const floors = [] as Floor[];
 let floors_loaded = 0;
-const MEDIA_STORAGE_URI = "https://mycenterportal-media-staging.s3.us-east-2.amazonaws.com";
+let MEDIA_STORAGE_URI: string = '';
 
 function select<T>(...values: T[]) {
     return values.find(value => value !== '' && value != null) || values.at(-1);
@@ -206,7 +206,7 @@ const init = (config: IJsonConfig, floors:IFloorData[], response: MapIt2Response
 }*/
 
 
-const useMeshFloors = (data: MapIt2Response|null, jsonConfig?: Partial<IJsonConfig>, role?: TRoles): IMeshParamsTmp => {
+const useMeshFloors = (data: MapIt2Response|null, jsonConfig?: Partial<IJsonConfig>, role?: TRoles, mediaStorageURI?: string): IMeshParamsTmp => {
     const [meshParams, setMeshParams] = useState<IMeshValues[][]>([]);
     const [textParams, setTextParams] = useState<Array<{textMesh:IExtMesh}[]>>([]);
     const [storeLogos, setStoreLogos] = useState<{storeLogo: Mesh}[][]>([]);
@@ -215,6 +215,16 @@ const useMeshFloors = (data: MapIt2Response|null, jsonConfig?: Partial<IJsonConf
     const [urls, setUrls] = useState<string[]>([]);
     const [ processedConfig, setProcessedConfig ] = useState<IConfig|null>(null);
     let result = useLoader(SVGLoader, urls);
+
+    MEDIA_STORAGE_URI = useMemo(() => {
+        const r = /\/$/;
+        if (mediaStorageURI) {
+            return mediaStorageURI?.replace(r, '');
+        }
+
+        return '';
+
+    }, [mediaStorageURI])
 
     const consolePrefix = 'MAPIT2';
     // const myFont = useLoader(FontLoader, 'assets/threejs/threejs/examples/fonts/optimer_regular.typeface.json')
@@ -296,7 +306,6 @@ const useMeshFloors = (data: MapIt2Response|null, jsonConfig?: Partial<IJsonConf
 
         const { GeometriesAndMaterials, graph, escalator_nodes } = loadFloors(floorsData, processedConfig, result, role);
         const TextsAndLogos:Array<{textMesh:IExtMesh}[]> = [];
-        console.debug({allNonIndexedMapObjects});
         allNonIndexedMapObjects.forEach((params) => {
             let values: IMeshValues | undefined;
             for (let i = 0; i < GeometriesAndMaterials.length; i++) {
@@ -339,7 +348,6 @@ const useMeshFloors = (data: MapIt2Response|null, jsonConfig?: Partial<IJsonConf
                 })
             });
         }
-        console.debug({TextsAndLogos});
         setMeshParams(GeometriesAndMaterials);
         setTextParams(TextsAndLogos);
         setPathFinderGraph(graph);

@@ -1,7 +1,7 @@
 import {IMeshParams, TRoles} from "../../types";
 import {ThreeEvent} from "@react-three/fiber";
 import React, {MouseEventHandler} from "react";
-import {Mesh, MeshLambertMaterial, MeshStandardMaterial, RGB} from "three";
+import {Mesh, MeshLambertMaterial, MeshStandardMaterial, RGB, BoxHelper} from "three";
 import {RouteTube} from "./RouteTube";
 import {Html} from "@react-three/drei";
 import styles from '../../MapBox.module.css';

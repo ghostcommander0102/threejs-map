@@ -11,11 +11,11 @@ export interface IAppProps {
     config: Partial<IJsonConfig>;
     stats?: boolean;
     onSettingsLoading?: (settings: MapIt2Response) => void;
-    APIUri?: string;
+    webApiURI?: string;
+    mediaStorageURI?: string;
 }
 
-function MapBox({ mapitData, config, onSettingsLoading, APIUri }: IAppProps) {
-
+function MapBox({ mapitData, config, onSettingsLoading, webApiURI, mediaStorageURI }: IAppProps) {
   const [selectedActiveObjectId, setSelectedActiveObjectId] = useState<string>('');
   const [mapData, setMapData] = useState<any>(undefined);
 
@@ -35,7 +35,7 @@ function MapBox({ mapitData, config, onSettingsLoading, APIUri }: IAppProps) {
   return (
     <MeshObjectContextProvider>
       <div className={`${styles['mapbox-component']} ${config.ROLE !== 'PORTAL'? styles.view : ''}`}>
-          <SceneComponent setSelectedActiveObjectId={setSelectedActiveObjectId} selectedActiveObjectId={selectedActiveObjectId} mapitData={mapData} config={config} onSettingsLoading={onSettingsLoading} APIUri={APIUri}/>
+          <SceneComponent setSelectedActiveObjectId={setSelectedActiveObjectId} selectedActiveObjectId={selectedActiveObjectId} mapitData={mapData} config={config} onSettingsLoading={onSettingsLoading} webApiURI={webApiURI} mediaStorageURI={mediaStorageURI} />
         <div className={styles.hide}>
           <div id="map-special-svg-kiosk">
             <svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 443.83 787.21">
