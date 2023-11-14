@@ -258,7 +258,9 @@ const useMeshFloors = (data: MapIt2Response|null, jsonConfig?: Partial<IJsonConf
         const processedConfig = init(jsonConfig ? {...config, ...jsonConfig} : config, floorsData, data as MapIt2Response);
         const values: string[] = [];
         processedConfig.FLOORS.forEach((value) => {
-            values.push(`${MEDIA_STORAGE_URI}/${value.svg}`);
+            // values.push(`${MEDIA_STORAGE_URI}/${value.svg}`);
+            //@ts-ignore
+            values.push(`${value.svg}`);
         });
 
         setProcessedConfig(processedConfig);

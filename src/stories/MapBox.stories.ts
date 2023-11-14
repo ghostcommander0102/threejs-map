@@ -66,6 +66,20 @@ export const Editor33: Story = {
     mediaStorageURI: 'https://mycenterportal-media-staging.s3.us-east-2.amazonaws.com',
   },
 };
+
+export const Viewer33: Story = {
+  name: 'Viewer: Center 33',
+  args: {
+    config:{
+      ROLE: "WEBSITE",
+      CENTER_ID:'33',
+      KIOSK: "102"
+    },
+    webApiURI: 'https://web-backend-staging.eyeonportal.com/',
+    mediaStorageURI: 'https://mycenterportal-media-staging.s3.us-east-2.amazonaws.com',
+  },
+};
+
 export const Editor8: Story = {
   name: 'Editor: Center 8',
   args: {
