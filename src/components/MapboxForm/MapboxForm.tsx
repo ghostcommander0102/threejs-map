@@ -434,7 +434,7 @@ const MapboxForm = (params: IMapboxForm) => {
             } else {
                 //TODO remove center_id magic number
                 setFormData({
-                    ...getDefaultMapOjbValues('33'),
+                    ...getDefaultMapOjbValues(centerId),
                     id: (new Date()).getTime(),
                 });
             }

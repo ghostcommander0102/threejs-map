@@ -39,6 +39,8 @@ export function useMapit2Data({ CENTER_ID, mapitData, webApiURI }: useMapIt2Data
             const mapObjsApiUri = `${apiURI}/v1/mapit2/data/`;
             const floorsApiUri = `${apiURI}/v1/mapit2/floors/?limit=1000&offset=0`;
 
+            console.warn('CENTER ID', CENTER_ID);
+
             const retailersPromise = fetch(retailersApiUri, {
                 headers: {
                     center_id: CENTER_ID,
@@ -76,6 +78,7 @@ export function useMapit2Data({ CENTER_ID, mapitData, webApiURI }: useMapIt2Data
                     }));
                     responseData.map_objs = [...data[1].items];
                     responseData.floors = [...data[2].items];
+                    console.log('Floors DAta', responseData.floors);
                     responseData.camera_controls_states = {...demoData.camera_controls_states};
                     responseData.settings = {
                         ...demoData.settings,
