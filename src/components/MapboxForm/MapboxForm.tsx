@@ -2,7 +2,7 @@ import { MeshType, getMaterial } from "../../Hooks/useMeshFloors/getMaterialAndG
 import { useMeshObjectContext } from "src/contexts/MeshObjectContextProvider";
 import { getImage, layer_text_logo_position_by_id, processImage } from "src/helpers/draw.logo.helpers";
 import { getFormatedColor, hex_to_color } from "src/helpers/misc";
-import { IRetailer, MapObj } from "src/mapitApiTypes";
+import { IRetailer, MapObj, MapObjToSave } from "src/mapitApiTypes";
 import { MouseEventHandler, SyntheticEvent, useEffect, useRef, useState, useTransition } from "react";
 import { Button, Col, Form, FormControl, FormControlProps, Nav, Row, Tab, Tabs } from "react-bootstrap"
 import { ArrowClockwise } from "react-bootstrap-icons";
@@ -22,6 +22,7 @@ interface IMapboxForm {
     setData: (index: number, data: MapObj) => void;
     selectedId: string;
     centerId: string;
+    onSubmit?: (data: MapObjToSave) => void;
 }
 
 const mainTabs = ['retailer', 'special', 'custom', ''] as const;
@@ -434,7 +435,7 @@ const MapboxForm = (params: IMapboxForm) => {
             } else {
                 //TODO remove center_id magic number
                 setFormData({
-                    ...getDefaultMapOjbValues(centerId),
+                    ...getDefaultMapOjbValues('33'),
                     id: (new Date()).getTime(),
                 });
             }
@@ -516,6 +517,11 @@ const MapboxForm = (params: IMapboxForm) => {
         }
     }
 
+    const handleOnSubmit = () => {
+        if (params.onSubmit && context && context.MeshObject) {
+            params.onSubmit({...formData, map_obj_name: context.MeshObject[0].object_id as string});
+        }
+    }
 
     return (
         <>
@@ -900,6 +906,9 @@ const MapboxForm = (params: IMapboxForm) => {
                         </Col>
                     </Row>
                 }
+                <Row className="justify-content-center px-5 py-5">
+                    <button onClick={handleOnSubmit} className="btn btn-success">Save</button>
+                </Row>
             </Form.Group>
         </>
     );

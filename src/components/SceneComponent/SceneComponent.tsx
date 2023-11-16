@@ -7,7 +7,7 @@ import {DoubleSide, Mesh, MeshLambertMaterial, Object3D} from "three";
 import {IAmenitiesInteractiveList, IExtMesh, IJsonConfig, IMeshParams, TMapMode, TMapSettingsProps} from "src/types";
 import {FloorsMap} from "./FloorsMap";
 import {useMapit2Data} from "../../useMapit2Data";
-import {MapIt2Response, MapObj} from "../../mapitApiTypes";
+import {MapIt2Response, MapObj, MapObjToSave} from "../../mapitApiTypes";
 import { Stats } from '@react-three/drei';
 import UIComponent from "../../components/UIComponent";
 import {MapCenterMarker} from "./MapCenterMarker";
@@ -60,6 +60,7 @@ interface ISceneComponentProps {
     onSettingsLoading?: (settings: MapIt2Response) => void;
     webApiURI?: string;
     mediaStorageURI?: string;
+    onSubmit: (data: MapObjToSave) => void;
 }
 
 export interface IZoomData {
@@ -368,6 +369,7 @@ const SceneComponent = (params:ISceneComponentProps) => {
                             setData={handleChangeMapitData}
                             selectedId={selectedActiveObjectId}
                             centerId={params.config.CENTER_ID as string}
+                            onSubmit={params.onSubmit}
                         />
                     }
                 </div>

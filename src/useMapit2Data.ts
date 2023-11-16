@@ -38,8 +38,7 @@ export function useMapit2Data({ CENTER_ID, mapitData, webApiURI }: useMapIt2Data
             const retailersApiUri = `${apiURI}/v1/retailers/?limit=1000&page=1`;
             const mapObjsApiUri = `${apiURI}/v1/mapit2/data/`;
             const floorsApiUri = `${apiURI}/v1/mapit2/floors/?limit=1000&offset=0`;
-
-            console.warn('CENTER ID', CENTER_ID);
+            const kioskApiUri = `${apiURI}/v1/display_kiosks/?limit=1000&page=1`;
 
             const retailersPromise = fetch(retailersApiUri, {
                 headers: {
@@ -59,10 +58,17 @@ export function useMapit2Data({ CENTER_ID, mapitData, webApiURI }: useMapIt2Data
                 }
             }).then(repsonse => repsonse.json())
 
+            const kiosksPromise = fetch(kioskApiUri, {
+                headers: {
+                    center_id: CENTER_ID,
+                }
+            }).then(repsonse => repsonse.json())
+
             Promise.all<Array<any>>([
                 retailersPromise,
                 mapObjsPromise,
                 floorsPromise,
+                kiosksPromise,
             ]).then(data => {
                 if (data) {
                     const responseData: Partial<MapIt2Response> = {};
@@ -78,7 +84,6 @@ export function useMapit2Data({ CENTER_ID, mapitData, webApiURI }: useMapIt2Data
                     }));
                     responseData.map_objs = [...data[1].items];
                     responseData.floors = [...data[2].items];
-                    console.log('Floors DAta', responseData.floors);
                     responseData.camera_controls_states = {...demoData.camera_controls_states};
                     responseData.settings = {
                         ...demoData.settings,
@@ -86,6 +91,7 @@ export function useMapit2Data({ CENTER_ID, mapitData, webApiURI }: useMapIt2Data
                     }
                     responseData.kiosks = [];
                     responseData.amenities = {...demoData.amenities};
+                    responseData.kiosks = [...data[3].items];
 
                     setData({...responseData as MapIt2Response})
                 }

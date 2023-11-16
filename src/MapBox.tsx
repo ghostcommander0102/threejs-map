@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styles from './MapBox.module.css';
 import SceneComponent from './components/SceneComponent/SceneComponent';
-import {isMapIt2Response, MapIt2Response, MapObj} from "./mapitApiTypes";
+import {isMapIt2Response, MapIt2Response, MapObj, MapObjToSave} from "./mapitApiTypes";
 import {IJsonConfig, TMapMode, TMapSettingsProps, TRoles} from "./types";
 import MeshObjectContextProvider from 'src/contexts/MeshObjectContextProvider';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -13,9 +13,10 @@ export interface IAppProps {
     onSettingsLoading?: (settings: MapIt2Response) => void;
     webApiURI?: string;
     mediaStorageURI?: string;
+    onSubmit?: (data: MapObjToSave) => void;
 }
 
-function MapBox({ mapitData, config, onSettingsLoading, webApiURI, mediaStorageURI }: IAppProps) {
+function MapBox({ mapitData, config, onSettingsLoading, webApiURI, mediaStorageURI, onSubmit }: IAppProps) {
   const [selectedActiveObjectId, setSelectedActiveObjectId] = useState<string>('');
   const [mapData, setMapData] = useState<any>(undefined);
 
@@ -32,10 +33,25 @@ function MapBox({ mapitData, config, onSettingsLoading, webApiURI, mediaStorageU
     return null;
   }
 
+  const handleOnSubmit = (data: MapObjToSave) => {
+    if (onSubmit) {
+      onSubmit(data);
+    }
+  }
+
   return (
     <MeshObjectContextProvider>
       <div className={`${styles['mapbox-component']} ${config.ROLE !== 'PORTAL'? styles.view : ''}`}>
-          <SceneComponent setSelectedActiveObjectId={setSelectedActiveObjectId} selectedActiveObjectId={selectedActiveObjectId} mapitData={mapData} config={config} onSettingsLoading={onSettingsLoading} webApiURI={webApiURI} mediaStorageURI={mediaStorageURI} />
+        <SceneComponent
+          setSelectedActiveObjectId={setSelectedActiveObjectId}
+          selectedActiveObjectId={selectedActiveObjectId}
+          mapitData={mapData}
+          config={config}
+          onSettingsLoading={onSettingsLoading}
+          webApiURI={webApiURI}
+          mediaStorageURI={mediaStorageURI}
+          onSubmit={handleOnSubmit}
+        />
         <div className={styles.hide}>
           <div id="map-special-svg-kiosk">
             <svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 443.83 787.21">

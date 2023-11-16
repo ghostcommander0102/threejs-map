@@ -31,6 +31,7 @@ export type MapObj = {
     offsetY: string;
     goToFloor?: Function;
 };
+export type MapObjToSave = Omit<MapObj, 'goToFloor'>;
 export type Floor = {
     id: string;
     svg_map?: string;

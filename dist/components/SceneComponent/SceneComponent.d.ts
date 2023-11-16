@@ -1,6 +1,6 @@
 import React from "react";
 import { IJsonConfig } from "src/types";
-import { MapIt2Response, MapObj } from "../../mapitApiTypes";
+import { MapIt2Response, MapObj, MapObjToSave } from "../../mapitApiTypes";
 interface ISceneComponentProps {
     mapitData?: MapIt2Response;
     config: Partial<IJsonConfig>;
@@ -10,6 +10,7 @@ interface ISceneComponentProps {
     onSettingsLoading?: (settings: MapIt2Response) => void;
     webApiURI?: string;
     mediaStorageURI?: string;
+    onSubmit: (data: MapObjToSave) => void;
 }
 export interface IZoomData {
     direction: 'in' | 'out';

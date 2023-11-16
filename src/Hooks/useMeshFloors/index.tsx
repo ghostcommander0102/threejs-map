@@ -91,7 +91,7 @@ function makeIndexedMapObjects(map_objs: MapObj[]) {
 }
 
 const init = (config: IJsonConfig, floors:IFloorData[], response: MapIt2Response) => {
-
+    console.debug({response});
     const KIOSKS:Record<string, Kiosk> = {};
     response.kiosks.forEach((kiosk) => {
         KIOSKS[kiosk.id] = kiosk;
