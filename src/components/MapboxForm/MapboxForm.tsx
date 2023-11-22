@@ -254,11 +254,9 @@ const MapboxForm = (params: IMapboxForm) => {
         if (formData.layer_type === 'retail_logo') {
             const retailIndex = data.retailers.findIndex((item: IRetailer) => formData.retailer_id === item.id);
             if (retailIndex !== -1) {
-                console.log('!!!!!!!!', data, retailIndex)
                 img = getImage(formData, data.retailers[retailIndex]);
             }
         } else {
-            console.log('Data2', data)
             img = getImage(formData);
         }
         if (img instanceof HTMLImageElement) {
