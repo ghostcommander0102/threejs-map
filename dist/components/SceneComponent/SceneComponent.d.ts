@@ -10,7 +10,7 @@ interface ISceneComponentProps {
     onSettingsLoading?: (settings: MapIt2Response) => void;
     webApiURI?: string;
     mediaStorageURI?: string;
-    onSubmit: (data: MapObjToSave) => void;
+    onSubmit?: (data: MapObjToSave, refreshData?: () => void) => void;
 }
 export interface IZoomData {
     direction: 'in' | 'out';

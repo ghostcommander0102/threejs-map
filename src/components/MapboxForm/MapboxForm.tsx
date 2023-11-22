@@ -22,7 +22,7 @@ interface IMapboxForm {
     setData: (index: number, data: MapObj) => void;
     selectedId: string;
     centerId: string;
-    onSubmit?: (data: MapObjToSave) => void;
+    onSubmit?: (data: MapObjToSave, refreshData?: () => void) => void;
 }
 
 const mainTabs = ['retailer', 'special', 'custom', ''] as const;
@@ -69,13 +69,13 @@ const MapboxForm = (params: IMapboxForm) => {
     const {data, setData, selectedId, centerId, config, floorIndex, meshFloors} = params;
 
     const myFont = useFont(fontData as unknown as FontData);
-
     const [mainTabKey, setMainTabKey] = useState<TMainTabsKey>('');
     const [retailerTabsKey, setRetailerTabsKey] = useState<TRetailerTabsKey>('');
     const [specialTabsKey, setSpecialTabsKey] = useState<TSpecialTabsKey>('');
-    const [formData, setFormData] = useState<MapObj>(getDefaultMapOjbValues(centerId));
+    const [formData, setFormData] = useState<MapObj | null>(null);
     const [rotation, setRotation] = useState<number | undefined>(undefined);
     const context = useMeshObjectContext();
+    const [oldMapObjName, setOldMapObjName] = useState<string | null>(null);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
     const [isPending, startTransition] = useTransition();
     const intervalRefs = useRef<TIncDecInterval>({});
@@ -89,6 +89,7 @@ const MapboxForm = (params: IMapboxForm) => {
     }, [formData, mainTabKey, retailerTabsKey])
 
     const handleChangeTab = (k:  any | null) => {
+        if (!formData) return;
         const key: TMainTabsKey | TRetailerTabsKey | TSpecialTabsKey | null = k;
         if (key !== null) {
             if (isTMainTabsKey(key)) {
@@ -126,7 +127,7 @@ const MapboxForm = (params: IMapboxForm) => {
                         let text = '';
                         switch (key) {
                             case 'retail_name':
-                                const retailIndex = data.retailers.findIndex((item: IRetailer) => formData.retailer_id === item.id.toString());
+                                const retailIndex = data.retailers.findIndex((item: IRetailer) => formData.retailer_id.toString() === item.id.toString());
 
                                 if (retailIndex !== -1) {
                                     text = data.retailers[retailIndex].retail_name;
@@ -167,6 +168,7 @@ const MapboxForm = (params: IMapboxForm) => {
     }
 
     const handleRotateChange = (e: any) => {
+        if (!formData) return;
         formData.rotate = e.target.value;
         setFormData({...formData});
         const index = data.map_objs.findIndex((value: MapObj) => value.id === formData.id);
@@ -177,6 +179,7 @@ const MapboxForm = (params: IMapboxForm) => {
     }
 
     const handleReset = () => {
+        if (!formData) return;
         const defaultValues = getDefaultMapOjbValues(formData.center_id);
         setFormData({
             ...defaultValues,
@@ -197,7 +200,7 @@ const MapboxForm = (params: IMapboxForm) => {
     }
 
     const handleChangeRetailer = (e: any) => {
-        if (e.target.value) {
+        if (e.target.value && formData) {
             formData.retailer_id = e.target.value;
             formData.kiosk_id = '';
             setFormData({...formData});
@@ -206,7 +209,7 @@ const MapboxForm = (params: IMapboxForm) => {
     }
 
     const handleChangeKiosk = (e: any) => {
-        if (e.target.value) {
+        if (e.target.value && formData) {
             formData.kiosk_id = e.target.value;
             formData.retailer_id = '';
             setFormData({...formData});
@@ -219,7 +222,7 @@ const MapboxForm = (params: IMapboxForm) => {
     }
 
     const handleChangeAmenity = (e: any) => {
-        if (e.target.value) {
+        if (e.target.value && formData) {
             formData.value = e.target.value; 
             setFormData({...formData});
             updateData({...formData});
@@ -231,6 +234,7 @@ const MapboxForm = (params: IMapboxForm) => {
     }
 
     const makeTextGeometry = (obj: IExtMesh, text: string, size: string) => {
+        if (oldMapObjName !== formData?.map_obj_name) return;
         let text_geometry = new TextGeometry(text, {
             font: (obj.userData && obj.userData.font)? obj.userData.font : myFont,
             size: parseInt(size),
@@ -245,6 +249,7 @@ const MapboxForm = (params: IMapboxForm) => {
     }
 
     const makeImage = (formData: MapObj, obj: IExtMesh) => {
+        if (oldMapObjName !== formData?.map_obj_name) return;
         let img = null;
         if (formData.layer_type === 'retail_logo') {
             const retailIndex = data.retailers.findIndex((item: IRetailer) => formData.retailer_id === item.id);
@@ -276,6 +281,7 @@ const MapboxForm = (params: IMapboxForm) => {
     }
 
     const changeValue = (name: string, value: string) => {
+        if (!formData) return;
         // if (name === 'custom_image' && context?.MeshObject && context.MeshObject.length <= 1) {
         //     formData.custom_image = value;
         //     setFormData({...formData});
@@ -433,10 +439,9 @@ const MapboxForm = (params: IMapboxForm) => {
             if (index !== -1) {
                 setFormData({...data.map_objs[index]});
             } else {
-                //TODO remove center_id magic number
                 setFormData({
-                    ...getDefaultMapOjbValues('33'),
-                    id: (new Date()).getTime(),
+                    ...getDefaultMapOjbValues(centerId),
+                    id: 'new-' + (new Date()).getTime(),
                 });
             }
         }
@@ -446,15 +451,19 @@ const MapboxForm = (params: IMapboxForm) => {
     }, [data, selectedId])
 
     useEffect(() => {
+        if (!formData) return;
         if (formData.obj_type) {
             handleChangeTab(formData.obj_type);
+            setOldMapObjName(formData.map_obj_name);
         }
         if (formData.layer_type) {
             handleChangeTab(formData.layer_type);
+            setOldMapObjName(formData.map_obj_name);
         }
     }, [formData])
 
     const decrementValue = (key: TIncDecKey) => {
+        if (!formData) return;
         if (Object.hasOwn(formData, key)) {
             let value = parseInt(formData[key]);
             value -= 1;
@@ -463,6 +472,7 @@ const MapboxForm = (params: IMapboxForm) => {
     }
 
     const incrementValue = (key: TIncDecKey) => {
+        if (!formData) return;
         if (Object.hasOwn(formData, key)) {
             let value = parseInt(formData[key]);
             value += 1;
@@ -471,6 +481,7 @@ const MapboxForm = (params: IMapboxForm) => {
     }
 
     const rotateByFixedAngle = (key:TIncDecKey, angle: number) => {
+        if (!formData) return;
         if (Object.hasOwn(formData, key)) {
             let value = parseInt(formData[key]);
             value += angle;
@@ -518,10 +529,12 @@ const MapboxForm = (params: IMapboxForm) => {
     }
 
     const handleOnSubmit = () => {
-        if (params.onSubmit && context && context.MeshObject) {
+        if (params.onSubmit && context && context.MeshObject && formData) {
             params.onSubmit({...formData, map_obj_name: context.MeshObject[0].object_id as string});
         }
     }
+
+    if (!formData) return null;
 
     return (
         <>
@@ -907,7 +920,7 @@ const MapboxForm = (params: IMapboxForm) => {
                     </Row>
                 }
                 <Row className="justify-content-center px-5 py-5">
-                    <button onClick={handleOnSubmit} className="btn btn-success">Save</button>
+                    <button onClick={handleOnSubmit} className="btn btn-success">{formData.id.toString().startsWith('new-')? 'Save' : 'Update'}</button>
                 </Row>
             </Form.Group>
         </>

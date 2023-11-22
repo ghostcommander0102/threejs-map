@@ -13,7 +13,7 @@ export interface IAppProps {
     onSettingsLoading?: (settings: MapIt2Response) => void;
     webApiURI?: string;
     mediaStorageURI?: string;
-    onSubmit?: (data: MapObjToSave) => void;
+    onSubmit?: (data: MapObjToSave, refreshData?: () => void) => void;
 }
 
 function MapBox({ mapitData, config, onSettingsLoading, webApiURI, mediaStorageURI, onSubmit }: IAppProps) {
@@ -33,9 +33,9 @@ function MapBox({ mapitData, config, onSettingsLoading, webApiURI, mediaStorageU
     return null;
   }
 
-  const handleOnSubmit = (data: MapObjToSave) => {
+  const handleOnSubmit = (data: MapObjToSave, refreshData?: () => void) => {
     if (onSubmit) {
-      onSubmit(data);
+      onSubmit(data, refreshData);
     }
   }
 

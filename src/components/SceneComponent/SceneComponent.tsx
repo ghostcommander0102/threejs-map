@@ -60,7 +60,7 @@ interface ISceneComponentProps {
     onSettingsLoading?: (settings: MapIt2Response) => void;
     webApiURI?: string;
     mediaStorageURI?: string;
-    onSubmit: (data: MapObjToSave) => void;
+    onSubmit?: (data: MapObjToSave, refreshData?: () => void) => void;
 }
 
 export interface IZoomData {
@@ -73,7 +73,7 @@ export type TFormMapObjData = {
 }
 
 const SceneComponent = (params:ISceneComponentProps) => {
-    const data = useMapit2Data({ mapitData:params.mapitData, CENTER_ID: params.config.CENTER_ID as string, webApiURI: params.webApiURI });
+    const {data, refreshData} = useMapit2Data({ mapitData:params.mapitData, CENTER_ID: params.config.CENTER_ID as string, webApiURI: params.webApiURI });
     const [selectedFloorIndex, setSelectedFloorIndex] = useState<number>(-1);
     const [formMapObjData, setFormMapObjData] = useState<TFormMapObjData[]>([]);
 
@@ -142,7 +142,7 @@ const SceneComponent = (params:ISceneComponentProps) => {
     }
 
     const handleChangeMapitData = (index: number, newData: MapObj) => {
-        const itemIndex = formMapObjData.findIndex((item) => item.data.id === newData.id);
+        const itemIndex = formMapObjData.findIndex((item) => item.data.map_obj_name === newData.map_obj_name);
 
         if (itemIndex !== -1) {
             formMapObjData[itemIndex] = { index, data: { ...newData } };
@@ -157,7 +157,7 @@ const SceneComponent = (params:ISceneComponentProps) => {
     if (data && data.map_objs) {
       if (formMapObjData) {
         formMapObjData.forEach((value) => {
-          const index = data.map_objs.findIndex((item: MapObj) => item.id === value.data.id);
+          const index = data.map_objs.findIndex((item: MapObj) => item.map_obj_name === value.data.map_obj_name);
           if (index !== -1) {
             data.map_objs[index] = { ...value.data };
           }
@@ -168,6 +168,11 @@ const SceneComponent = (params:ISceneComponentProps) => {
     return data;
   }
 
+  const handleOnSubmit = (data: MapObjToSave) => {
+    if (params.onSubmit) {
+        params.onSubmit(data, refreshData);
+    }
+  }
 
     useEffect(() => {
         // console.log('useEffect currentHoveredObject', currentHoveredObject)
@@ -369,7 +374,7 @@ const SceneComponent = (params:ISceneComponentProps) => {
                             setData={handleChangeMapitData}
                             selectedId={selectedActiveObjectId}
                             centerId={params.config.CENTER_ID as string}
-                            onSubmit={params.onSubmit}
+                            onSubmit={handleOnSubmit}
                         />
                     }
                 </div>

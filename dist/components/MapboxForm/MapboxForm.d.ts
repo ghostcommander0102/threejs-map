@@ -8,8 +8,8 @@ interface IMapboxForm {
     setData: (index: number, data: MapObj) => void;
     selectedId: string;
     centerId: string;
-    onSubmit?: (data: MapObjToSave) => void;
+    onSubmit?: (data: MapObjToSave, refreshData?: () => void) => void;
 }
 export declare const getDefaultMapOjbValues: (centerId: string) => MapObj;
-declare const MapboxForm: (params: IMapboxForm) => import("react/jsx-runtime").JSX.Element;
+declare const MapboxForm: (params: IMapboxForm) => import("react/jsx-runtime").JSX.Element | null;
 export default MapboxForm;

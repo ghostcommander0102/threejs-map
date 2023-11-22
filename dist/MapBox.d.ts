@@ -8,7 +8,7 @@ export interface IAppProps {
     onSettingsLoading?: (settings: MapIt2Response) => void;
     webApiURI?: string;
     mediaStorageURI?: string;
-    onSubmit?: (data: MapObjToSave) => void;
+    onSubmit?: (data: MapObjToSave, refreshData?: () => void) => void;
 }
 declare function MapBox({ mapitData, config, onSettingsLoading, webApiURI, mediaStorageURI, onSubmit }: IAppProps): import("react/jsx-runtime").JSX.Element | null;
 export default MapBox;
