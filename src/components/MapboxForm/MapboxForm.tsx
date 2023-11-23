@@ -252,7 +252,7 @@ const MapboxForm = (params: IMapboxForm) => {
         if (oldMapObjName !== formData?.map_obj_name) return;
         let img = null;
         if (formData.layer_type === 'retail_logo') {
-            const retailIndex = data.retailers.findIndex((item: IRetailer) => formData.retailer_id === item.id);
+            const retailIndex = data.retailers.findIndex((item: IRetailer) => formData.retailer_id.toString() === item.id.toString());
             if (retailIndex !== -1) {
                 img = getImage(formData, data.retailers[retailIndex]);
             }
@@ -319,8 +319,8 @@ const MapboxForm = (params: IMapboxForm) => {
                     formData.size = value;
                     if (!(['retail_logo', 'kiosk', 'amenity', 'custom_image'].includes(formData.layer_type))) {
                         let text = '';
-                        if (formData.layer_type === 'retail_name' && obj.userData.retail_name) {
-                            const retailIndex = data.retailers.findIndex((item: IRetailer) => formData.retailer_id === item.id);
+                        if (formData.layer_type === 'retail_name' && obj.userData && obj.userData.retail_name) {
+                            const retailIndex = data.retailers.findIndex((item: IRetailer) => formData.retailer_id.toString() === item.id.toString());
                             if (retailIndex !== -1) {
                                 text = data.retailers[retailIndex].retail_name;
                             }

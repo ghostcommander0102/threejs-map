@@ -256,7 +256,6 @@ export const processImage = (img: HTMLImageElement, map_obj: Record<string, any>
 }
 
 function getImageLogo(allIndexedRetailers: Record<string, any>, map_obj: Record<string, any>, mesh: BufferGeometry,object_id: string, new_object_id: string | null, mesh_center_point: Vector3, mesh_size: Vector3, floors: any, handleAsync: (meshLogo: {storeLogo: Object3D}) => void): void {
-
     const img = getImage(map_obj, allIndexedRetailers[map_obj.retailer_id]);
 
     if (img === null) return;
