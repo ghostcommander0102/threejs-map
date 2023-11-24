@@ -1,4 +1,4 @@
-import React, {MouseEventHandler, useCallback, useEffect, useMemo, useRef, useState} from "react";
+import React, {MouseEventHandler, forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react";
 import {Canvas, ThreeEvent, useThree} from "@react-three/fiber";
 import useMeshFloors, { textLogoNamePrefix } from "../../Hooks/useMeshFloors";
 import {SceneProperties} from "./SceneProperties";
@@ -72,7 +72,7 @@ export type TFormMapObjData = {
   data: MapObj,
 }
 
-const SceneComponent = (params:ISceneComponentProps) => {
+const SceneComponent = forwardRef((params:ISceneComponentProps, ref) => {
     const {data, refreshData} = useMapit2Data({ mapitData:params.mapitData, CENTER_ID: params.config.CENTER_ID as string, webApiURI: params.webApiURI });
     const [selectedFloorIndex, setSelectedFloorIndex] = useState<number>(-1);
     const [formMapObjData, setFormMapObjData] = useState<TFormMapObjData[]>([]);
@@ -104,6 +104,10 @@ const SceneComponent = (params:ISceneComponentProps) => {
     const config = meshFloors.config;
     const floors = meshFloors.floors;
     const meshParams = meshFloors.meshParams;
+
+    useImperativeHandle(ref, () => ({
+        refreshData,
+    }))
 
     useEffect(() => {
         if (data && meshFloors.config && params.onSettingsLoading) {
@@ -434,7 +438,7 @@ const SceneComponent = (params:ISceneComponentProps) => {
             </div>
         </>
     )
-};
+});
 
 
 

@@ -19,5 +19,5 @@ export type TFormMapObjData = {
     index: number;
     data: MapObj;
 };
-declare const SceneComponent: (params: ISceneComponentProps) => import("react/jsx-runtime").JSX.Element;
+declare const SceneComponent: React.ForwardRefExoticComponent<ISceneComponentProps & React.RefAttributes<unknown>>;
 export default SceneComponent;

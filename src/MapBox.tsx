@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { MutableRefObject, useEffect, useRef, useState } from 'react';
 import styles from './MapBox.module.css';
 import SceneComponent from './components/SceneComponent/SceneComponent';
 import {isMapIt2Response, MapIt2Response, MapObj, MapObjToSave} from "./mapitApiTypes";
@@ -6,6 +6,9 @@ import {IJsonConfig, TMapMode, TMapSettingsProps, TRoles} from "./types";
 import MeshObjectContextProvider from 'src/contexts/MeshObjectContextProvider';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+export type MapBoxRefFs = {
+  refreshData: () => void,
+}
 export interface IAppProps {
     mapitData?: unknown;
     config: Partial<IJsonConfig>;
@@ -14,9 +17,11 @@ export interface IAppProps {
     webApiURI?: string;
     mediaStorageURI?: string;
     onSubmit?: (data: MapObjToSave, refreshData?: () => void) => void;
+    refObj?: MutableRefObject<MapBoxRefFs | null> | undefined,
 }
 
-function MapBox({ mapitData, config, onSettingsLoading, webApiURI, mediaStorageURI, onSubmit }: IAppProps) {
+
+function MapBox({ mapitData, config, onSettingsLoading, webApiURI, mediaStorageURI, onSubmit, refObj }: IAppProps) {
   const [selectedActiveObjectId, setSelectedActiveObjectId] = useState<string>('');
   const [mapData, setMapData] = useState<any>(undefined);
 
@@ -43,6 +48,7 @@ function MapBox({ mapitData, config, onSettingsLoading, webApiURI, mediaStorageU
     <MeshObjectContextProvider>
       <div className={`${styles['mapbox-component']} ${config.ROLE !== 'PORTAL'? styles.view : ''}`}>
         <SceneComponent
+          ref={refObj}
           setSelectedActiveObjectId={setSelectedActiveObjectId}
           selectedActiveObjectId={selectedActiveObjectId}
           mapitData={mapData}

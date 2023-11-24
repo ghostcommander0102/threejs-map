@@ -32,8 +32,8 @@ export function useMapit2Data({ CENTER_ID, mapitData, webApiURI }: useMapIt2Data
             const r = /\/$/;
             apiURI = apiURI.replace(r, '');
             const retailersApiUri = `${apiURI}/v1/retailers/?limit=1000&page=1`;
-            const mapObjsApiUri = `${apiURI}/v1/mapit2/data/?center_id=${CENTER_ID}`;
-            const floorsApiUri = `${apiURI}/v1/mapit2/floors/?center_id=${CENTER_ID}&limit=1000&offset=0`;
+            const mapObjsApiUri = `${apiURI}/v1/mapit2/data/`;
+            const floorsApiUri = `${apiURI}/v1/mapit2/floors/?limit=1000&offset=0`;
             const kioskApiUri = `${apiURI}/v1/display_kiosks/?limit=1000&page=1`;
 
             const retailersPromise = fetch(retailersApiUri, {
