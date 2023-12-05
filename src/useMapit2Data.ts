@@ -39,26 +39,54 @@ export function useMapit2Data({ CENTER_ID, mapitData, webApiURI }: useMapIt2Data
             const retailersPromise = fetch(retailersApiUri, {
                 headers: {
                     center_id: CENTER_ID,
+                },
+            }).then(repsonse => {
+                if (!repsonse.ok) {
+                    throw new Error(`Server error: [${repsonse.status}] [${repsonse.statusText}] [${repsonse.url}]`);
                 }
-            }).then(repsonse => repsonse.json())
+                return repsonse.json();
+            }).catch(e => {throw new Error(e)})
 
             const mapObjsPromise = fetch(mapObjsApiUri, {
                 headers: {
                     center_id: CENTER_ID,
                 },
-            }).then(repsonse => repsonse.json())
+            }).then(repsonse => {
+                if (!repsonse.ok) {
+                    throw new Error(`Server error: [${repsonse.status}] [${repsonse.statusText}] [${repsonse.url}]`);
+                }
+                return repsonse.json()
+            }).catch(e => {throw new Error(e)})
 
             const floorsPromise = fetch(floorsApiUri, {
                 headers: {
                     center_id: CENTER_ID,
+                },
+            }).then(repsonse => {
+                if (!repsonse.ok) {
+                    throw new Error(`Server error: [${repsonse.status}] [${repsonse.statusText}] [${repsonse.url}]`);
                 }
-            }).then(repsonse => repsonse.json())
+                return repsonse.json()
+            })
+            .then(data => {
+                if (!data
+                    || !data.items
+                    || (data.items && !data.items.length)) {
+                    throw new Error('Empty floors data from server');
+                }
+                return data;
+            }).catch(e => {throw new Error(e)})
 
             const kiosksPromise = fetch(kioskApiUri, {
                 headers: {
                     center_id: CENTER_ID,
+                },
+            }).then(repsonse => {
+                if (!repsonse.ok) {
+                    throw new Error(`Server error: [${repsonse.status}] [${repsonse.statusText}] [${repsonse.url}]`);
                 }
-            }).then(repsonse => repsonse.json())
+                return repsonse.json()
+            }).catch(e => {throw new Error(e)})
 
             Promise.all<Array<any>>([
                 retailersPromise,
