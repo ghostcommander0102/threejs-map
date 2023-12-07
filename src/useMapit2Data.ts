@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useState} from "react";
-import {IRetailer, MapIt2Response} from "./mapitApiTypes";
+import {IRetailer, MapIt2Response, Settings} from "./mapitApiTypes";
 import demoData from './demo/data.json';
 
 interface useMapIt2DataProps {
@@ -20,6 +20,7 @@ type Mapit2DataReturn = {
  */
 export function useMapit2Data({ CENTER_ID, mapitData, webApiURI }: useMapIt2DataProps) : Mapit2DataReturn {
     const [data, setData] = useState<MapIt2Response|null>(null);
+    console.debug({data});
 
     if (!CENTER_ID && !mapitData) {
         console.error('useMapit2Data requires either CENTER_ID or mapitData');
@@ -35,38 +36,39 @@ export function useMapit2Data({ CENTER_ID, mapitData, webApiURI }: useMapIt2Data
             const mapObjsApiUri = `${apiURI}/v1/mapit2/data/`;
             const floorsApiUri = `${apiURI}/v1/mapit2/floors/?limit=1000&offset=0`;
             const kioskApiUri = `${apiURI}/v1/display_kiosks/?limit=1000&page=1`;
+            const settingsApiUri = `${apiURI}/v1/mapit2/settings/${CENTER_ID}`;
 
             const retailersPromise = fetch(retailersApiUri, {
                 headers: {
                     center_id: CENTER_ID,
                 },
-            }).then(repsonse => {
-                if (!repsonse.ok) {
-                    throw new Error(`Server error: [${repsonse.status}] [${repsonse.statusText}] [${repsonse.url}]`);
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server error: [${response.status}] [${response.statusText}] [${response.url}]`);
                 }
-                return repsonse.json();
+                return response.json();
             }).catch(e => {throw new Error(e)})
 
             const mapObjsPromise = fetch(mapObjsApiUri, {
                 headers: {
                     center_id: CENTER_ID,
                 },
-            }).then(repsonse => {
-                if (!repsonse.ok) {
-                    throw new Error(`Server error: [${repsonse.status}] [${repsonse.statusText}] [${repsonse.url}]`);
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server error: [${response.status}] [${response.statusText}] [${response.url}]`);
                 }
-                return repsonse.json()
+                return response.json()
             }).catch(e => {throw new Error(e)})
 
             const floorsPromise = fetch(floorsApiUri, {
                 headers: {
                     center_id: CENTER_ID,
                 },
-            }).then(repsonse => {
-                if (!repsonse.ok) {
-                    throw new Error(`Server error: [${repsonse.status}] [${repsonse.statusText}] [${repsonse.url}]`);
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server error: [${response.status}] [${response.statusText}] [${response.url}]`);
                 }
-                return repsonse.json()
+                return response.json()
             })
             .then(data => {
                 if (!data
@@ -81,11 +83,22 @@ export function useMapit2Data({ CENTER_ID, mapitData, webApiURI }: useMapIt2Data
                 headers: {
                     center_id: CENTER_ID,
                 },
-            }).then(repsonse => {
-                if (!repsonse.ok) {
-                    throw new Error(`Server error: [${repsonse.status}] [${repsonse.statusText}] [${repsonse.url}]`);
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server error: [${response.status}] [${response.statusText}] [${response.url}]`);
                 }
-                return repsonse.json()
+                return response.json()
+            }).catch(e => {throw new Error(e)})
+
+            const settingsPromise = fetch(settingsApiUri, {
+                headers: {
+                    center_id: CENTER_ID,
+                }
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server error: [${response.status}] [${response.statusText}] [${response.url}]`);
+                }
+                return response.json();
             }).catch(e => {throw new Error(e)})
 
             Promise.all<Array<any>>([
@@ -93,8 +106,9 @@ export function useMapit2Data({ CENTER_ID, mapitData, webApiURI }: useMapIt2Data
                 mapObjsPromise,
                 floorsPromise,
                 kiosksPromise,
+                settingsPromise,
             ]).then(data => {
-                if (data.length >= 4) {
+                if (data.length >= 5) {
                     const responseData: Partial<MapIt2Response> = {};
                     responseData.retailers = data[0].items.map((item: any): IRetailer => ({
                         id: item.id,
@@ -120,6 +134,8 @@ export function useMapit2Data({ CENTER_ID, mapitData, webApiURI }: useMapIt2Data
                     responseData.kiosks = [];
                     responseData.amenities = {...demoData.amenities};
                     responseData.kiosks = [...data[3].items];
+                    const settings: Settings = data[4].settings? data[4].settings : undefined; 
+                    responseData.settings = settings;
 
                     setData({...responseData as MapIt2Response})
                 }
